@@ -13,5 +13,5 @@ Tested using Matlab 2022a
 Required toolboxes (customised copies included)
 - DataHigh (Factor analysis)
 - CellExplorer (ACG analysis)
-- Umakantha et al., 2021 (Population mettrics)
+- Umakantha et al., 2021 (Population metrics)
 
