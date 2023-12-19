@@ -149,7 +149,7 @@ end
 
 handles = []; % no longer needed
 
-candidateDims = 10%:50; % 1:50, 
+candidateDims = 10:50; % 1:50, 
 alg = 3; % 1PCA, 2PPCA, 3FA, 4 LDA, 5 GPFA
 [projs, mse, like] = cvreducedims_edd(D, alg, candidateDims, handles);
 [~, idx] = max(like); % find q that maximises likelihood of data
