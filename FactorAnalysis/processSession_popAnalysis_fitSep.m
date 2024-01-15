@@ -1,4 +1,4 @@
-function processSession_popAnalysis(inputFileName,outputFileName,dataDir)
+function processSession_popAnalysis_fitSep(inputFileName,outputFileName,dataDir)
 
 load(fullfile(dataDir,inputFileName))
 
@@ -63,13 +63,13 @@ end
 %% pre-proces binned spike counts for FA
 
 % split stat/run trials
-for iunit = 1:numel(units)
+for iunit = 1:numel(tempUnits)
     tempUnits(iunit).dmSC_10ms_stat = tempUnits(iunit).allSpikes(:,1)';
     tempUnits(iunit).dmSC_10ms_run = tempUnits(iunit).allSpikes(:,2)';
 end
 
 % use only good units
-units = tempUnits([tempUnits.isi_viol]<=0.1...
+units = tempUnits([units.isi_viol]<=0.1...
     & [tempUnits.amplitude_cutoff]<=0.1 & [tempUnits.amplitude]>=50);
 %% preprocess data
 
@@ -104,7 +104,7 @@ for iunit =1:numel(units)
     tempData = horzcat(processedData{:});
     zmean = mean(tempData(:));
     zstd = std(tempData(:));
-    %processedData = cellfun(@(x) arrayfun(@(x) (x-zmean)/(zstd), x), processedData,'UniformOutput',false);
+    processedData = cellfun(@(x) arrayfun(@(x) (x-zmean)/(zstd), x), processedData,'UniformOutput',false);
     vispu_new(iunit).processedData = processedData(:);
 
     % for gpfa
@@ -123,21 +123,35 @@ nTrialsByCond = cellfun(@(x) size(x,2), vispu_new(1).processedData);
 
 % generate input data
 
-% input data for Factor Analysis (pre-smoothed))
-D = struct;
-ii = 0;
+
 cols = inferno(7);
 
 tempUnits = vispu_new;
 
 
-
-for ispeed = 1:nConds
+% get D struct for stat and run separately
+% input data for Factor Analysis (pre-smoothed))
+D_stat = struct;
+ii = 0;
+for ispeed = 1:6
     for itrial = 1:size(tempUnits(1).processedData{ispeed},2)
         ii = ii+1;
         for iunit = 1:numel(tempUnits)
-            D(ii).data(iunit,:) = tempUnits(iunit).processedData{ispeed}(:,itrial);
-            D(ii).condition = num2str(ispeed);
+            D_stat(ii).data(iunit,:) = tempUnits(iunit).processedData{ispeed}(:,itrial);
+            D_stat(ii).condition = num2str(ispeed);
+            %                D(ii).epochColors = cols(ispeed,:);
+        end
+    end
+end
+
+D_run = struct;
+ii = 0;
+for ispeed = 7:12
+    for itrial = 1:size(tempUnits(1).processedData{ispeed},2)
+        ii = ii+1;
+        for iunit = 1:numel(tempUnits)
+            D_run(ii).data(iunit,:) = tempUnits(iunit).processedData{ispeed}(:,itrial);
+            D_run(ii).condition = num2str(ispeed)-6;
             %                D(ii).epochColors = cols(ispeed,:);
         end
     end
@@ -191,58 +205,58 @@ end
 s.cond= cond;
 
 %% decoding with all dims
-
-options.OptimizeHyperparameters =  'none';
-options.Gamma=1;
-options.kfold = 3;
-options.DiscrimType='diagLinear';
-nPerms = 10;
-
-% stat decoding
-dims2use = 1:s.q;
-for iperm = 1:nPerms
-    %iperm
-for iint = 1:(numel(binVector)-nDecodingBins)
-
-    bin2use = iint:(iint+(nDecodingBins-1));
-    dataStruct = [];
-    for ispeed = 1:nConds/2
-        dataStruct(ispeed).data = cond(ispeed).catData(bin2use,dims2use,:);
-    end
-    [perm(iperm).meanPerf(iint),semPerf(iint), pCorrect(:,iint), predcond(iint).cond,...
-        perm(iperm).meanError(iint), semError(iint), predcond(iint).confMatrix] = do_cvDA(dataStruct,options);
-
-end
-
-end
-
-stat.meanPerf = mean(cat(1,perm.meanPerf),1);
-stat.semPerf = sem(cat(1,perm.meanPerf),1);
-stat.meanError =  mean(cat(1,perm.meanError),1);
-
-clear perm
-
-% run decoding
-dims2use = 1:s.q;
-for iperm = 1:nPerms
-    %iperm
-for iint = 1:(numel(binVector)-nDecodingBins)
-
-    bin2use = iint:(iint+(nDecodingBins-1));
-    dataStruct = [];
-    for ispeed = 1:nConds/2
-            dataStruct(ispeed).data = cond(ispeed+nConds/2).catData(bin2use,dims2use,:);
-    end
-    [perm(iperm).meanPerf(iint),semPerf(iint), pCorrect(:,iint), predcond(iint).cond,...
-        perm(iperm).meanError(iint), semError(iint), predcond(iint).confMatrix] = do_cvDA(dataStruct,options);
-
-end
-
-end
-
-run.meanPerf = mean(cat(1,perm.meanPerf),1);
-run.semPerf = sem(cat(1,perm.meanPerf),1);
-run.meanError =  mean(cat(1,perm.meanError),1);
+% 
+% options.OptimizeHyperparameters =  'none';
+% options.Gamma=1;
+% options.kfold = 3;
+% options.DiscrimType='diagLinear';
+% nPerms = 10;
+% 
+% % stat decoding
+% dims2use = 1:s.q;
+% for iperm = 1:nPerms
+%     %iperm
+% for iint = 1:(numel(binVector)-nDecodingBins)
+% 
+%     bin2use = iint:(iint+(nDecodingBins-1));
+%     dataStruct = [];
+%     for ispeed = 1:nConds/2
+%         dataStruct(ispeed).data = cond(ispeed).catData(bin2use,dims2use,:);
+%     end
+%     [perm(iperm).meanPerf(iint),semPerf(iint), pCorrect(:,iint), predcond(iint).cond,...
+%         perm(iperm).meanError(iint), semError(iint), predcond(iint).confMatrix] = do_cvDA(dataStruct,options);
+% 
+% end
+% 
+% end
+% 
+% stat.meanPerf = mean(cat(1,perm.meanPerf),1);
+% stat.semPerf = sem(cat(1,perm.meanPerf),1);
+% stat.meanError =  mean(cat(1,perm.meanError),1);
+% 
+% clear perm
+% 
+% % run decoding
+% dims2use = 1:s.q;
+% for iperm = 1:nPerms
+%     %iperm
+% for iint = 1:(numel(binVector)-nDecodingBins)
+% 
+%     bin2use = iint:(iint+(nDecodingBins-1));
+%     dataStruct = [];
+%     for ispeed = 1:nConds/2
+%             dataStruct(ispeed).data = cond(ispeed+nConds/2).catData(bin2use,dims2use,:);
+%     end
+%     [perm(iperm).meanPerf(iint),semPerf(iint), pCorrect(:,iint), predcond(iint).cond,...
+%         perm(iperm).meanError(iint), semError(iint), predcond(iint).confMatrix] = do_cvDA(dataStruct,options);
+% 
+% end
+% 
+% end
+% 
+% run.meanPerf = mean(cat(1,perm.meanPerf),1);
+% run.semPerf = sem(cat(1,perm.meanPerf),1);
+% run.meanError =  mean(cat(1,perm.meanError),1);
 
 
 %% save session data
