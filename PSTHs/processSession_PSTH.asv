@@ -23,78 +23,73 @@ tsd = tsd([tsd.Contrast1]==1);
 
 %% split trials according to behavioural state
 
-stateTrialType = 'strict'; % 'normal', 'strict', 'changepoints'
+stateTrialType = 'normal'; % 'strict', 'changepoints'
 
-switch stateTrialType
-    case 'normal'
 
-        % normal paper criteria
-        statTrials = tsd(cellfun(@(x) prop(x<3)>=0.75 & mean(x)<0.5, {tsd.WheelSpeed}));
-        runTrials = tsd(cellfun(@(x) prop(x>0.5)>=0.75 & mean(x)>3, {tsd.WheelSpeed}));
+% normal paper criteria
+statTrials = tsd(cellfun(@(x) prop(x<3)>=0.75 & mean(x)<0.5, {tsd.WheelSpeed}));
+runTrials = tsd(cellfun(@(x) prop(x>0.5)>=0.75 & mean(x)>3, {tsd.WheelSpeed}));
 
-    case 'strict'
-        % stricter criteria
-        statTrials = tsd(cellfun(@(x) prop(x<0.5)>=1 & mean(x)<0.5, {tsd.WheelSpeed}));
-        runTrials = tsd(cellfun(@(x) prop(x>0.5)>=1 & mean(x)>3, {tsd.WheelSpeed}));
+% stricter criteria
+statTrials = tsd(cellfun(@(x) prop(x<0.5)>=1 & mean(x)<0.5, {tsd.WheelSpeed}));
+runTrials = tsd(cellfun(@(x) prop(x>0.5)>=1 & mean(x)>3, {tsd.WheelSpeed}));
 
-    case 'changepoints'
+% Change-point analysis (Lohani et al., 2022) to get locomotion trials
+wheelSpeed = cat(1,wheel.rawSpeedInterp);
+wheelZSpd = zscore(wheelSpeed);
+wheelTime = cat(1,wheel.eTimeInterp);
+data = wheelZSpd;
+zThres = 0.005; % moving standard deviations exceeded/fell below an empirical threshold of 0.005
+timestamps = wheelTime;
+inSampleRate = 100;
+smoothWin = 0.5; % moving standard deviation of speed (2s in Lohani)
+changeDur=5; % minimum duration of the state change in seconds (5s in Lohani)
+timeBetween=0.5; % minimum time between off and the next on in seconds
 
-        % Change-point analysis (Lohani et al., 2022) to get locomotion trials
-        wheelSpeed = cat(1,wheel.rawSpeedInterp);
-        wheelZSpd = zscore(wheelSpeed);
-        wheelTime = cat(1,wheel.eTimeInterp);
-        data = wheelZSpd;
-        zThres = 0.005; % moving standard deviations exceeded/fell below an empirical threshold of 0.005
-        timestamps = wheelTime;
-        inSampleRate = 100;
-        smoothWin = 0.5; % moving standard deviation of speed (2s in Lohani)
-        changeDur=5; % minimum duration of the state change in seconds (5s in Lohani)
-        timeBetween=0.5; % minimum time between off and the next on in seconds
+% get original epochs of locomotion
+[~,OnTStamp ,OffTStamp ] =changepoints(data, zThres,timestamps,inSampleRate,...
+    smoothWin,changeDur,timeBetween);
 
-        % get original epochs of locomotion
-        [~,OnTStamp ,OffTStamp ] =changepoints(data, zThres,timestamps,inSampleRate,...
-            smoothWin,changeDur,timeBetween);
+locoInterval_meanSpeed=[];
+locoInterval_duration=[];
+locoInterval_timeSinceLast=[];
 
-        locoInterval_meanSpeed=[];
-        locoInterval_duration=[];
-        locoInterval_timeSinceLast=[];
-
-        for i=1:numel(OnTStamp)
-            locoInterval_meanSpeed(i) = mean(wheelSpeed(find(wheelTime==OnTStamp(i)):find(wheelTime==OffTStamp(i))));
-            locoInterval_duration(i) = OffTStamp(i)-OnTStamp(i);
-            if i>1
-                locoInterval_timeSinceLast(i) = OnTStamp(i)-OffTStamp(i-1);
-            end
-        end
-
-        % remove intervals that don't meet criteria
-        toDelIdx = find([locoInterval_meanSpeed]<3 | [locoInterval_duration]<5);
-        nToDel = numel(toDelIdx);
-
-        OnTStamp(toDelIdx)=[];
-        OffTStamp(toDelIdx)=[];
-
-        % find trials that start and end within a locomotion epoch
-        % loop through each locomotion epoch and find valid trials
-        nEpochs = numel(OnTStamp);
-
-        allStartTimes = cat(1,tsd.PDstart)-0.2;
-        allEndTimes = cat(1,tsd.PDend)+0.8;
-
-        runIdx = [];
-        % must start and finish within the time range
-
-        for iepoch = 1:nEpochs
-            runIdx_temp = find(allStartTimes>OnTStamp(iepoch) & allStartTimes<OffTStamp(iepoch)...
-                & allEndTimes>OnTStamp(iepoch) & allEndTimes<OffTStamp(iepoch));
-
-            runIdx=cat(1,runIdx,runIdx_temp);
-        end
-
-        runTrials = tsd(runIdx);
-        % use stricter stationary trial criteria
-        statTrials = tsd(cellfun(@(x) prop(x<0.5)>=1 & mean(x)<0.5, {tsd.WheelSpeed}));
+for i=1:numel(OnTStamp)
+    locoInterval_meanSpeed(i) = mean(wheelSpeed(find(wheelTime==OnTStamp(i)):find(wheelTime==OffTStamp(i))));
+    locoInterval_duration(i) = OffTStamp(i)-OnTStamp(i);
+    if i>1
+        locoInterval_timeSinceLast(i) = OnTStamp(i)-OffTStamp(i-1);
+    end
 end
+
+% remove intervals that don't meet criteria
+toDelIdx = find([locoInterval_meanSpeed]<3 | [locoInterval_duration]<5);
+nToDel = numel(toDelIdx);
+
+OnTStamp(toDelIdx)=[];
+OffTStamp(toDelIdx)=[];
+
+% find trials that start and end within a locomotion epoch
+% loop through each locomotion epoch and find valid trials
+nEpochs = numel(OnTStamp);
+
+allStartTimes = cat(1,tsd.PDstart)-0.2;
+allEndTimes = cat(1,tsd.PDend)+0.8;
+
+runIdx = [];
+% must start and finish within the time range
+
+for iepoch = 1:nEpochs
+    runIdx_temp = find(allStartTimes>OnTStamp(iepoch) & allStartTimes<OffTStamp(iepoch)...
+        & allEndTimes>OnTStamp(iepoch) & allEndTimes<OffTStamp(iepoch));
+
+    runIdx=cat(1,runIdx,runIdx_temp);
+end
+
+runTrials = tsd(runIdx);
+% use stricter stationary trial criteria
+statTrials = tsd(cellfun(@(x) prop(x<0.5)>=1 & mean(x)<0.5, {tsd.WheelSpeed}));
+
 
 
 %% optionally detect and remove any trials w/ clear eye movements

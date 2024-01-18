@@ -19,14 +19,14 @@ for isession = 1:size(sessionTags,1)
     inputFileName = [sessionTags{isession,1},'_', sessionTags{isession,2},'_', inputSuffix];
     outputFileName = [sessionTags{isession,1},'_', sessionTags{isession,2},'_', saveSuffix];
 
-    % processSession_PSTH(inputFileName,outputFileName,dataDir) 
+     processSession_PSTH(inputFileName,outputFileName,dataDir) 
     % processSession_r2overTime(inputFileName,outputFileName,dataDir)
     % processSession_correlationAnalysis_v2(inputFileName,outputFileName,dataDir)
     % processSession_decoding(inputFileName,outputFileName,dataDir)
     %processSession_popAnalysis(inputFileName,outputFileName,dataDir)
     % processSession_FAoverTime(inputFileName,outputFileName,dataDir)
 
-    processSession_popAnalysis_fitSep(inputFileName,outputFileName,dataDir)
+    %processSession_popAnalysis_fitSep(inputFileName,outputFileName,dataDir)
 
 
 

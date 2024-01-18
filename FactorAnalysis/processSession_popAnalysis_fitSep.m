@@ -85,13 +85,13 @@ plotFlag = false;
 
 options.kfold = 9999;
 
-
-scName = 'allSpikes';
+vispu_new = struct;
+scName = 'dmSC_10ms_stat';
 for iunit =1:numel(units)
 
     % optionally bin data
     %binnedData = cellfun(@(x) sumEveryN(sqrt(x), bin_N, 1)', units(iunit).(scName), 'UniformOutput', false);
-    binnedData = units(iunit).(scName);
+    binnedData = units(iunit).(scName)';
     % sqrt and smooth data for FA
     processedData = cellfun(@(x) smoothdata(sqrt(x), 1, 'gaussian', smoothWidth/(bin_N*binSize)), binnedData,'UniformOutput', false);
     % get average for calculting mean firing rate
@@ -104,7 +104,7 @@ for iunit =1:numel(units)
     tempData = horzcat(processedData{:});
     zmean = mean(tempData(:));
     zstd = std(tempData(:));
-    processedData = cellfun(@(x) arrayfun(@(x) (x-zmean)/(zstd), x), processedData,'UniformOutput',false);
+    %processedData = cellfun(@(x) arrayfun(@(x) (x-zmean)/(zstd), x), processedData,'UniformOutput',false);
     vispu_new(iunit).processedData = processedData(:);
 
     % for gpfa
@@ -126,36 +126,22 @@ nTrialsByCond = cellfun(@(x) size(x,2), vispu_new(1).processedData);
 
 cols = inferno(7);
 
-tempUnits = vispu_new;
-
 
 % get D struct for stat and run separately
 % input data for Factor Analysis (pre-smoothed))
 D_stat = struct;
 ii = 0;
 for ispeed = 1:6
-    for itrial = 1:size(tempUnits(1).processedData{ispeed},2)
+    for itrial = 1:size(vispu_new(1).processedData{ispeed},2)
         ii = ii+1;
-        for iunit = 1:numel(tempUnits)
-            D_stat(ii).data(iunit,:) = tempUnits(iunit).processedData{ispeed}(:,itrial);
+        for iunit = 1:numel(vispu_new)
+            D_stat(ii).data(iunit,:) = vispu_new(iunit).processedData{ispeed}(:,itrial);
             D_stat(ii).condition = num2str(ispeed);
             %                D(ii).epochColors = cols(ispeed,:);
         end
     end
 end
 
-D_run = struct;
-ii = 0;
-for ispeed = 7:12
-    for itrial = 1:size(tempUnits(1).processedData{ispeed},2)
-        ii = ii+1;
-        for iunit = 1:numel(tempUnits)
-            D_run(ii).data(iunit,:) = tempUnits(iunit).processedData{ispeed}(:,itrial);
-            D_run(ii).condition = num2str(ispeed)-6;
-            %                D(ii).epochColors = cols(ispeed,:);
-        end
-    end
-end
 
 
 
@@ -163,12 +149,14 @@ end
 
 handles = []; % no longer needed
 
-candidateDims = 10:50; % 1:50, 
+
+% stat 
+candidateDims = 10:37; % 1:50, 
 alg = 3; % 1PCA, 2PPCA, 3FA, 4 LDA, 5 GPFA
-[projs, mse, like] = cvreducedims_edd(D, alg, candidateDims, handles);
+[projs, mse, like] = cvreducedims_edd(D_stat, alg, candidateDims, handles);
 [~, idx] = max(like); % find q that maximises likelihood of data
 q = candidateDims(idx);
-[newD, C, lat, explained, params] = reducedims_EH(D,alg, q, handles); % do FA using q dims
+[newD, C, lat, explained, params] = reducedims_EH(D_stat,alg, q, handles); % do FA using q dims
 
 s.q = q;
 s.qOpt = compute_dshared(params);
@@ -178,10 +166,11 @@ s.params = params;
 s.propSharedVariance = [lat(1); diff(lat)];
 s.loadings = C;
 s.nUnits = size(C,1);
-s.D=D;
+s.D=D_stat;
+s.explained = explained;
 
 for itrial = 1:numel(newD)
-    newD(itrial).y = D(itrial).data;
+    newD(itrial).y = D_stat(itrial).data;
 end
 
 loadings = C;
@@ -191,7 +180,7 @@ s.nUnits = nUnits;
 
 
 nBins = 200/bin_N;
-
+cond = struct; nConds = 6;
 for icond = 1:nConds
     idx = find(strcmp({newD.condition},num2str(icond)));
     cond(icond).catData = cat(3,newD(idx).data);
@@ -204,66 +193,114 @@ end
 
 s.cond= cond;
 
-%% decoding with all dims
-% 
-% options.OptimizeHyperparameters =  'none';
-% options.Gamma=1;
-% options.kfold = 3;
-% options.DiscrimType='diagLinear';
-% nPerms = 10;
-% 
-% % stat decoding
-% dims2use = 1:s.q;
-% for iperm = 1:nPerms
-%     %iperm
-% for iint = 1:(numel(binVector)-nDecodingBins)
-% 
-%     bin2use = iint:(iint+(nDecodingBins-1));
-%     dataStruct = [];
-%     for ispeed = 1:nConds/2
-%         dataStruct(ispeed).data = cond(ispeed).catData(bin2use,dims2use,:);
-%     end
-%     [perm(iperm).meanPerf(iint),semPerf(iint), pCorrect(:,iint), predcond(iint).cond,...
-%         perm(iperm).meanError(iint), semError(iint), predcond(iint).confMatrix] = do_cvDA(dataStruct,options);
-% 
-% end
-% 
-% end
-% 
-% stat.meanPerf = mean(cat(1,perm.meanPerf),1);
-% stat.semPerf = sem(cat(1,perm.meanPerf),1);
-% stat.meanError =  mean(cat(1,perm.meanError),1);
-% 
-% clear perm
-% 
-% % run decoding
-% dims2use = 1:s.q;
-% for iperm = 1:nPerms
-%     %iperm
-% for iint = 1:(numel(binVector)-nDecodingBins)
-% 
-%     bin2use = iint:(iint+(nDecodingBins-1));
-%     dataStruct = [];
-%     for ispeed = 1:nConds/2
-%             dataStruct(ispeed).data = cond(ispeed+nConds/2).catData(bin2use,dims2use,:);
-%     end
-%     [perm(iperm).meanPerf(iint),semPerf(iint), pCorrect(:,iint), predcond(iint).cond,...
-%         perm(iperm).meanError(iint), semError(iint), predcond(iint).confMatrix] = do_cvDA(dataStruct,options);
-% 
-% end
-% 
-% end
-% 
-% run.meanPerf = mean(cat(1,perm.meanPerf),1);
-% run.semPerf = sem(cat(1,perm.meanPerf),1);
-% run.meanError =  mean(cat(1,perm.meanError),1);
+stat.s = s;
+clear s
+
+
+%% run 
+
+
+vispu_new = struct;
+scName = 'dmSC_10ms_run';
+for iunit =1:numel(units)
+
+    % optionally bin data
+    %binnedData = cellfun(@(x) sumEveryN(sqrt(x), bin_N, 1)', units(iunit).(scName), 'UniformOutput', false);
+    binnedData = units(iunit).(scName)';
+    % sqrt and smooth data for FA
+    processedData = cellfun(@(x) smoothdata(sqrt(x), 1, 'gaussian', smoothWidth/(bin_N*binSize)), binnedData,'UniformOutput', false);
+    % get average for calculting mean firing rate
+    average_smooth = cellfun(@(x) smoothdata(mean(x,2),'gaussian', smoothWidth/(bin_N*binSize)), binnedData, 'UniformOutput', false);
+
+    mu = mean(vertcat(average_smooth{:}));
+    mu = mu*(1000/(binSize*bin_N));
+
+    % zscore data
+    tempData = horzcat(processedData{:});
+    zmean = mean(tempData(:));
+    zstd = std(tempData(:));
+    %processedData = cellfun(@(x) arrayfun(@(x) (x-zmean)/(zstd), x), processedData,'UniformOutput',false);
+    vispu_new(iunit).processedData = processedData(:);
+
+    % for gpfa
+    vispu_new(iunit).binnedData = binnedData(:);
+
+    vispu_new(iunit).mu = mu;
+    vispu_new(iunit).ID = string(units(iunit).cluster_id);
+end
+
+% remove low fr units
+vispu_new([vispu_new.mu]<minFR) = [];
+
+% get number fo available trials
+nTrialsByCond = cellfun(@(x) size(x,2), vispu_new(1).processedData);
+
+
+D_run = struct;
+ii = 0;
+for ispeed = 1:6
+    for itrial = 1:size(vispu_new(1).processedData{ispeed},2)
+        ii = ii+1;
+        for iunit = 1:numel(vispu_new)
+            D_run(ii).data(iunit,:) = vispu_new(iunit).processedData{ispeed}(:,itrial);
+            D_run(ii).condition = num2str(ispeed);
+            %                D(ii).epochColors = cols(ispeed,:);
+        end
+    end
+end
+
+
+
+
+handles = []; % no longer needed
+candidateDims = 10:50; % 1:50, 
+alg = 3; % 1PCA, 2PPCA, 3FA, 4 LDA, 5 GPFA
+[projs, mse, like] = cvreducedims_edd(D_run, alg, candidateDims, handles);
+[~, idx] = max(like); % find q that maximises likelihood of data
+q = candidateDims(idx);
+[newD, C, lat, explained, params] = reducedims_EH(D_run,alg, q, handles); % do FA using q dims
+
+s.q = q;
+s.qOpt = compute_dshared(params);
+s.LoadingSim = compute_load_sim(params);
+s.SV = compute_perc_shared(params);
+s.params = params;
+s.propSharedVariance = [lat(1); diff(lat)];
+s.loadings = C;
+s.nUnits = size(C,1);
+s.D=D_run;
+s.explained = explained;
+
+for itrial = 1:numel(newD)
+    newD(itrial).y = D_run(itrial).data;
+end
+
+loadings = C;
+
+nUnits = numel(tempUnits);
+s.nUnits = nUnits;
+
+
+nBins = 200/bin_N;
+cond = struct; nConds = 6;
+for icond = 1:nConds
+    idx = find(strcmp({newD.condition},num2str(icond)));
+    cond(icond).catData = cat(3,newD(idx).data);
+    cond(icond).catData = permute(cond(icond).catData, [2, 1, 3]);
+    cond(icond).meanTrajectory = mean(cond(icond).catData,3);
+    Dout(icond).data = cond(icond).meanTrajectory;
+    %cond(ispeed).catData_sc = cat(3,newD(idx).y); % input spike counts
+    %cond(ispeed).catData_sc = permute(cond(ispeed).catData_sc, [2, 1, 3]);
+end
+
+s.cond= cond;
+
+run.s = s;
 
 
 %% save session data
 
 
-session.s = s;
-session.cond = cond;
 session.stat = stat;
 session.run = run;
 

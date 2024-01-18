@@ -222,20 +222,12 @@ for isession = 1:5
     nTrials = size(s(isession).session.cond(1).catData,3);
     for icond = 1:6
         for itrial = 1:nTrials
-           
-
-
             allStatTangling=cat(1,allStatTangling,...
                 s(isession).session.cond(icond).trial(itrial).localTangling);
 
             allRunTangling=cat(1,allRunTangling,...
                 s(isession).session.cond(icond+6).trial(itrial).localTangling);
-
-
-            
         end
-
-    
     end
 end
 
@@ -246,17 +238,20 @@ shadedErrorBar(-95:10:1695, mean(allRunTangling,1), sem(allRunTangling,1), 'line
 
 %  plot speed-wise local tangling
 figure
-allStat =[];
-allRun=[];
-for icond = 1:6
-    allStat=cat(1,allStat, cat(1,cond(icond).trial.localTangling));
-    allRun=cat(1,allRun, cat(1,cond(icond+6).trial.localTangling));
-    subplot(2,3,icond), hold on
-    shadedErrorBar(-95:10:1695, mean(cat(1,cond(icond).trial.localTangling),1), sem(cat(1,cond(icond).trial.localTangling),1))
-    shadedErrorBar(-95:10:1695, mean(cat(1,cond(icond+6).trial.localTangling),1), sem(cat(1,cond(icond+6).trial.localTangling),1),...
+for ispeed = 1:6
+    allStat =[];
+    allRun=[];
+    for isesh = 1:5
+    allStat=cat(1,allStat, cat(1,s(isesh).session.cond(ispeed).trial.localTangling));
+    allRun=cat(1,allRun, cat(1,s(isesh).session.cond(ispeed+6).trial.localTangling));
+    end
+    subplot(2,3,ispeed), hold on
+    shadedErrorBar(-95:10:1695, mean(allStat,1), sem(allStat,1))
+    shadedErrorBar(-95:10:1695, mean(allRun,1), sem(allRun,1),...
         'lineProps','r')
 
 end
+
 
 
 %% stats for single trial tangling

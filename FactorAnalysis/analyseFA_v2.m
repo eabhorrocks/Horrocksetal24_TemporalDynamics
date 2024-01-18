@@ -64,8 +64,8 @@ for isession = 1:5
 
     fnames = fieldnames(output_offset);
     for ifield = 1:numel(fnames)
-        s(isession).session.(['offset_', fnames{ifield}]) = {output_offset(1:6).(fnames{ifield})};
-        s(isession).session.(['offset_', fnames{ifield}]) = {output_offset(7:12).(fnames{ifield})};
+        s(isession).session.stat.(['offset_', fnames{ifield}]) = {output_offset(1:6).(fnames{ifield})};
+        s(isession).session.run.(['offset_', fnames{ifield}]) = {output_offset(7:12).(fnames{ifield})};
     end
 
 

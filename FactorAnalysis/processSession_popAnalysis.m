@@ -104,7 +104,8 @@ for iunit =1:numel(units)
     tempData = horzcat(processedData{:});
     zmean = mean(tempData(:));
     zstd = std(tempData(:));
-    %processedData = cellfun(@(x) arrayfun(@(x) (x-zmean)/(zstd), x), processedData,'UniformOutput',false);
+    % uncomment this line to z-score the data
+    %processedData = cellfun(@(x) arrayfun(@(x) (x-zmean)/(zstd), x), processedData,'UniformOutput',false); 
     vispu_new(iunit).processedData = processedData(:);
 
     % for gpfa
@@ -165,6 +166,7 @@ s.propSharedVariance = [lat(1); diff(lat)];
 s.loadings = C;
 s.nUnits = size(C,1);
 s.D=D;
+s.explained = explained;
 
 for itrial = 1:numel(newD)
     newD(itrial).y = D(itrial).data;

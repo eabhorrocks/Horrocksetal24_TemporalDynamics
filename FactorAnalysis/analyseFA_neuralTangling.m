@@ -31,7 +31,6 @@ for isesh = 1:5
         itime = 1:200;
         statTraj = s(isesh).session.cond(ispeed).meanTrajectory(itime,idim);
         runTraj = s(isesh).session.cond(ispeed+6).meanTrajectory(itime,idim);
-        weights = s(isesh).session.s.propSharedVariance(1:qOpt);
         deltaT = 10;
         epsVal = 0.1;
 
@@ -142,6 +141,9 @@ for isesh = 1:5
 end
 
 %% plot overall average local tangling
+
+speedcols = inferno(6);
+
 allStat=[];
 allRun=[];
 for isesh=1:5
@@ -184,6 +186,25 @@ subplot(212)
 xlim([-200 1800])
 ylim([0 0.008])
 defaultAxesProperties(gca, true)
+
+
+%  plot speed-wise local tangling
+figure
+
+for ispeed = 1:6
+    allStat =[];
+    allRun=[];
+    for isesh = 1:5
+        allStat = cat(1,allStat,sesh(isesh).speed(ispeed).statLocalTangling);
+        allRun = cat(1,allRun,sesh(isesh).speed(ispeed).runLocalTangling);
+    end
+    subplot(2,3,ispeed), hold on
+    shadedErrorBar(-95:10:1695, mean(allStat,1), sem(allStat,1))
+    shadedErrorBar(-95:10:1695, mean(allRun,1), sem(allRun,1),...
+        'lineProps','r')
+
+end
+
 
 
 
@@ -235,5 +256,5 @@ for ispeed = 1:6
 
 end
 
-xlim([0 0.006])
-ylim([0 0.006])
+xlim([0 0.002])
+ylim([0 0.002])
