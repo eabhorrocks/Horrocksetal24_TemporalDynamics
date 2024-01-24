@@ -23,7 +23,7 @@ tsd = tsd([tsd.Contrast1]==1);
 
 %% split trials according to behavioural state
 
-stateTrialType = 'strict'; % 'normal', 'strict', 'changepoints'
+stateTrialType = 'changepoints'; % 'normal', 'strict', 'changepoints'
 
 switch stateTrialType
     case 'normal'
@@ -35,62 +35,98 @@ switch stateTrialType
     case 'strict'
         % stricter criteria
         statTrials = tsd(cellfun(@(x) prop(x<0.5)>=1 & mean(x)<0.5, {tsd.WheelSpeed}));
-        runTrials = tsd(cellfun(@(x) prop(x>0.5)>=1 & mean(x)>3, {tsd.WheelSpeed}));
+        runTrials = tsd(cellfun(@(x) prop(x>0.5)>=0.9 & mean(x)>3, {tsd.WheelSpeed}));
 
     case 'changepoints'
 
-        % Change-point analysis (Lohani et al., 2022) to get locomotion trials
-        wheelSpeed = cat(1,wheel.rawSpeedInterp);
-        wheelZSpd = zscore(wheelSpeed);
-        wheelTime = cat(1,wheel.eTimeInterp);
-        data = wheelZSpd;
-        zThres = 0.005; % moving standard deviations exceeded/fell below an empirical threshold of 0.005
-        timestamps = wheelTime;
-        inSampleRate = 100;
-        smoothWin = 0.5; % moving standard deviation of speed (2s in Lohani)
-        changeDur=5; % minimum duration of the state change in seconds (5s in Lohani)
-        timeBetween=0.5; % minimum time between off and the next on in seconds
 
-        % get original epochs of locomotion
-        [~,OnTStamp ,OffTStamp ] =changepoints(data, zThres,timestamps,inSampleRate,...
-            smoothWin,changeDur,timeBetween);
+wheelOn=[]; wheelOff=[];
+for iwheel = 1:numel(wheel)
+    wheel(iwheel).rawSpeedInterp = cat(1,0, wheel(iwheel).rawSpeedInterp);
+    wheel(iwheel).eTimeInterp = cat(1,wheel(iwheel).eTimeInterp(1)-0.01, wheel(iwheel).eTimeInterp);
+    wheel(iwheel).rawSpeedInterp(end+1) = 0;
+    wheel(iwheel).eTimeInterp(end+1) = wheel(iwheel).eTimeInterp(end)+0.01;
 
-        locoInterval_meanSpeed=[];
-        locoInterval_duration=[];
-        locoInterval_timeSinceLast=[];
 
-        for i=1:numel(OnTStamp)
-            locoInterval_meanSpeed(i) = mean(wheelSpeed(find(wheelTime==OnTStamp(i)):find(wheelTime==OffTStamp(i))));
-            locoInterval_duration(i) = OffTStamp(i)-OnTStamp(i);
-            if i>1
-                locoInterval_timeSinceLast(i) = OnTStamp(i)-OffTStamp(i-1);
-            end
+    wheelOn(iwheel) = wheel(iwheel).eTimeInterp(1);
+    wheelOff(iwheel) = wheel(iwheel).eTimeInterp(end);
+end
+
+wheelSpeed = cat(1,wheel.rawSpeedInterp);
+wheelZSpd = zscore(wheelSpeed);
+wheelTime = cat(1,wheel.eTimeInterp);
+data = wheelZSpd;
+zThres = 0.005; % moving standard deviations exceeded/fell below an empirical threshold of 0.005
+timestamps = wheelTime;
+inSampleRate = 100;
+smoothWin = 2; % moving standard deviation of speed (2s in Lohani)
+changeDur=5; % minimum duration of the state change in seconds (5s in Lohani)
+timeBetween=0.5; % minimum time between off and the next on in seconds
+
+% lohani use 3s buffer from start/end points for sustained
+
+
+[~,OnTStamp ,OffTStamp ] =changepoints(data, zThres,timestamps,inSampleRate,...
+    smoothWin,changeDur,timeBetween);
+
+% check if intervals occur inbetween distinct recordings - if so, set off
+% to end time on wheel/on to 1st wheel time
+nEpochs = numel(OnTStamp);
+
+for iepoch = 1:nEpochs
+    for iwheel = 1:numel(wheel)
+        % if epoch goes passed where wheel recording ends (for this stim set)
+        % set its end time to wheel end + create a new epoch that starts
+        % with next wheel
+        if OnTStamp(iepoch)<wheelOff(iwheel) && OffTStamp(iepoch)>wheelOff(iwheel)
+            tempOff = OffTStamp(iepoch);
+            % end this epoch at end of wheel
+            OffTStamp(iepoch)=wheelOff(iwheel);
+            % create new epoch at start of next wheel and with original end
+            OnTStamp(numel(OnTStamp)+1) = wheelOn(iwheel+1);  
+            OffTStamp(numel(OffTStamp)+1) = tempOff;
         end
+    end
 
-        % remove intervals that don't meet criteria
-        toDelIdx = find([locoInterval_meanSpeed]<3 | [locoInterval_duration]<5);
-        nToDel = numel(toDelIdx);
+end
 
-        OnTStamp(toDelIdx)=[];
-        OffTStamp(toDelIdx)=[];
+locoInterval_meanSpeed=[];
+locoInterval_duration=[];
+locoInterval_timeSinceLast=[];
 
-        % find trials that start and end within a locomotion epoch
-        % loop through each locomotion epoch and find valid trials
-        nEpochs = numel(OnTStamp);
+for i=1:numel(OnTStamp)
+    locoInterval_meanSpeed(i) = mean(wheelSpeed(find(wheelTime==OnTStamp(i)):find(wheelTime==OffTStamp(i))));
+    locoInterval_duration(i) = OffTStamp(i)-OnTStamp(i);
+    if i>1
+        locoInterval_timeSinceLast(i) = OnTStamp(i)-OffTStamp(i-1);
+    end
+end
 
-        allStartTimes = cat(1,tsd.PDstart)-0.2;
-        allEndTimes = cat(1,tsd.PDend)+0.8;
+% remove intervals that don't meet criteria
+toDelIdx = find([locoInterval_meanSpeed]<3 | [locoInterval_duration]<5);
 
-        runIdx = [];
-        % must start and finish within the time range
+OnTStamp(toDelIdx)=[];
+OffTStamp(toDelIdx)=[];
 
-        for iepoch = 1:nEpochs
-            runIdx_temp = find(allStartTimes>OnTStamp(iepoch) & allStartTimes<OffTStamp(iepoch)...
-                & allEndTimes>OnTStamp(iepoch) & allEndTimes<OffTStamp(iepoch));
+% find trials that start and end within a locomotion epoch
+% loop through each locomotion epoch and find valid trials
+nEpochs = numel(OnTStamp);
 
-            runIdx=cat(1,runIdx,runIdx_temp);
-        end
+allStartTimes = cat(1,tsd.PDstart)-0.2;
+allEndTimes = cat(1,tsd.PDend)+0.8;
 
+runIdx = [];
+% must start and finish within the time range
+
+OnTStamp = OnTStamp+0.5; % remove smaall buffer from start and end of epochs
+OffTStamp = OffTStamp-0.5;
+
+for iepoch = 1:nEpochs
+    runIdx_temp = find(allStartTimes>OnTStamp(iepoch) & allStartTimes<OffTStamp(iepoch)...
+        & allEndTimes>OnTStamp(iepoch) & allEndTimes<OffTStamp(iepoch));
+
+    runIdx=cat(1,runIdx,runIdx_temp);
+end
         runTrials = tsd(runIdx);
         % use stricter stationary trial criteria
         statTrials = tsd(cellfun(@(x) prop(x<0.5)>=1 & mean(x)<0.5, {tsd.WheelSpeed}));
@@ -98,7 +134,7 @@ end
 
 
 %% optionally detect and remove any trials w/ clear eye movements
-
+removeEyeMovementTrials = false;
 if removeEyeMovementTrials
 
     for itrial = 1:numel(statTrials)
@@ -196,8 +232,9 @@ statBig_blankIntervals = [vertcat(statBigTrials_blank.PDstart), vertcat(statBigT
 minTrial = min([min(cellfun(@(x) size(x,1), stat_intervalsCell)),...
     min(cellfun(@(x) size(x,1), run_intervalsCell))]);
 
-stat_intervalsCell = cellfun(@(x) x(1:minTrial,:), stat_intervalsCell,'UniformOutput',false);
-run_intervalsCell = cellfun(@(x) x(1:minTrial,:), run_intervalsCell,'UniformOutput',false);
+
+%stat_intervalsCell = cellfun(@(x) x(1:minTrial,:), stat_intervalsCell,'UniformOutput',false);
+%run_intervalsCell = cellfun(@(x) x(1:minTrial,:), run_intervalsCell,'UniformOutput',false);
 
 
 %% generate PSTHs
@@ -225,8 +262,8 @@ for iunit =1:numel(units)
     [units(iunit).stat_psth, units(iunit).stat_blank, ~]            = makePSTH(units(iunit).spike_times*1000,stat_intervalsCell,stat_blankIntervals,options);
     [units(iunit).run_psth, units(iunit).run_blank, bmp]            = makePSTH(units(iunit).spike_times*1000,run_intervalsCell,run_blankIntervals,options);
 
-    [units(iunit).statSmall_psth, units(iunit).statSmall_blank, ~]  = makePSTH(units(iunit).spike_times*1000,statSmall_intervalsCell,statSmall_blankIntervals,options);
-    [units(iunit).statBig_psth, units(iunit).statBig_blank, ~]      = makePSTH(units(iunit).spike_times*1000,statBig_intervalsCell,statBig_blankIntervals,options);
+ %   [units(iunit).statSmall_psth, units(iunit).statSmall_blank, ~]  = makePSTH(units(iunit).spike_times*1000,statSmall_intervalsCell,statSmall_blankIntervals,options);
+ %   [units(iunit).statBig_psth, units(iunit).statBig_blank, ~]      = makePSTH(units(iunit).spike_times*1000,statBig_intervalsCell,statBig_blankIntervals,options);
 end
 
 
@@ -263,26 +300,26 @@ for iunit = 1:numel(units)
     units(iunit).run_psth = copyStructFields(metrics,units(iunit).run_psth);
 
     %%% stat small pupil psth %%%
-    statSmall_baseline = mean(units(iunit).statSmall_blank.psth);
-    clear metrics
-    % generate stuct array of psth metrics
-    for ispeed = 1:6
-        metrics(ispeed) = calc_PSTHmetrics(units(iunit).statSmall_psth(ispeed).psth,...
-            units(iunit).statSmall_psth(ispeed).zpsth, bmp, statSmall_baseline, zThresh, minRespEnd);
-    end
-    % copy metrics fields to psth structs
-    units(iunit).statSmall_psth = copyStructFields(metrics,units(iunit).statSmall_psth);
-
-    %%% stat big pupil psth %%%
-    statBig_baseline = mean(units(iunit).statBig_blank.psth);
-    clear metrics
-    % generate stuct array of psth metrics
-    for ispeed = 1:6
-        metrics(ispeed) = calc_PSTHmetrics(units(iunit).statBig_psth(ispeed).psth,...
-            units(iunit).statBig_psth(ispeed).zpsth, bmp, statBig_baseline, zThresh, minRespEnd);
-    end
-    % copy metrics fields to psth structs
-    units(iunit).statBig_psth = copyStructFields(metrics,units(iunit).statBig_psth);
+%     statSmall_baseline = mean(units(iunit).statSmall_blank.psth);
+%     clear metrics
+%     % generate stuct array of psth metrics
+%     for ispeed = 1:6
+%         metrics(ispeed) = calc_PSTHmetrics(units(iunit).statSmall_psth(ispeed).psth,...
+%             units(iunit).statSmall_psth(ispeed).zpsth, bmp, statSmall_baseline, zThresh, minRespEnd);
+%     end
+%     % copy metrics fields to psth structs
+%     units(iunit).statSmall_psth = copyStructFields(metrics,units(iunit).statSmall_psth);
+% 
+%     %%% stat big pupil psth %%%
+%     statBig_baseline = mean(units(iunit).statBig_blank.psth);
+%     clear metrics
+%     % generate stuct array of psth metrics
+%     for ispeed = 1:6
+%         metrics(ispeed) = calc_PSTHmetrics(units(iunit).statBig_psth(ispeed).psth,...
+%             units(iunit).statBig_psth(ispeed).zpsth, bmp, statBig_baseline, zThresh, minRespEnd);
+%     end
+%     % copy metrics fields to psth structs
+%     units(iunit).statBig_psth = copyStructFields(metrics,units(iunit).statBig_psth);
 
 end
 
@@ -327,31 +364,31 @@ for iunit= 1:numel(units)
 
 
         % stat small
-        response = normalize(units(iunit).statSmall_psth(ispeed).psth,'range');
-        resp_onset = response(21:51);
-        resp_offset = response(121:151);
-
-        [units(iunit).statSmall_psth(ispeed).onset_bestParams,...
-            units(iunit).statSmall_psth(ispeed).onset_char,...
-            units(iunit).statSmall_psth(ispeed).onset_bestR2] = fitGaussianTemplates_meanPSTH(resp_onset,5, false);
-
-        [units(iunit).statSmall_psth(ispeed).offset_bestParams,...
-            units(iunit).statSmall_psth(ispeed).offset_char,...
-            units(iunit).statSmall_psth(ispeed).offset_bestR2] = fitGaussianTemplates_meanPSTH(resp_offset,5, false);
-
-
-        % stat big
-        response = normalize(units(iunit).statBig_psth(ispeed).psth,'range');
-        resp_onset = response(21:51);
-        resp_offset = response(121:151);
-
-        [units(iunit).statBig_psth(ispeed).onset_bestParams,...
-            units(iunit).statBig_psth(ispeed).onset_char,...
-            units(iunit).statBig_psth(ispeed).onset_bestR2] = fitGaussianTemplates_meanPSTH(resp_onset,5, false);
-
-        [units(iunit).statBig_psth(ispeed).offset_bestParams,...
-            units(iunit).statBig_psth(ispeed).offset_char,...
-            units(iunit).statBig_psth(ispeed).offset_bestR2] = fitGaussianTemplates_meanPSTH(resp_offset,5, false);
+%         response = normalize(units(iunit).statSmall_psth(ispeed).psth,'range');
+%         resp_onset = response(21:51);
+%         resp_offset = response(121:151);
+% 
+%         [units(iunit).statSmall_psth(ispeed).onset_bestParams,...
+%             units(iunit).statSmall_psth(ispeed).onset_char,...
+%             units(iunit).statSmall_psth(ispeed).onset_bestR2] = fitGaussianTemplates_meanPSTH(resp_onset,5, false);
+% 
+%         [units(iunit).statSmall_psth(ispeed).offset_bestParams,...
+%             units(iunit).statSmall_psth(ispeed).offset_char,...
+%             units(iunit).statSmall_psth(ispeed).offset_bestR2] = fitGaussianTemplates_meanPSTH(resp_offset,5, false);
+% 
+% 
+%         % stat big
+%         response = normalize(units(iunit).statBig_psth(ispeed).psth,'range');
+%         resp_onset = response(21:51);
+%         resp_offset = response(121:151);
+% 
+%         [units(iunit).statBig_psth(ispeed).onset_bestParams,...
+%             units(iunit).statBig_psth(ispeed).onset_char,...
+%             units(iunit).statBig_psth(ispeed).onset_bestR2] = fitGaussianTemplates_meanPSTH(resp_onset,5, false);
+% 
+%         [units(iunit).statBig_psth(ispeed).offset_bestParams,...
+%             units(iunit).statBig_psth(ispeed).offset_char,...
+%             units(iunit).statBig_psth(ispeed).offset_bestR2] = fitGaussianTemplates_meanPSTH(resp_offset,5, false);
 
     end
 end

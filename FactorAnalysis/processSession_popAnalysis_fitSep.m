@@ -104,7 +104,7 @@ for iunit =1:numel(units)
     tempData = horzcat(processedData{:});
     zmean = mean(tempData(:));
     zstd = std(tempData(:));
-    %processedData = cellfun(@(x) arrayfun(@(x) (x-zmean)/(zstd), x), processedData,'UniformOutput',false);
+    processedData = cellfun(@(x) arrayfun(@(x) (x-zmean)/(zstd), x), processedData,'UniformOutput',false);
     vispu_new(iunit).processedData = processedData(:);
 
     % for gpfa
@@ -219,7 +219,7 @@ for iunit =1:numel(units)
     tempData = horzcat(processedData{:});
     zmean = mean(tempData(:));
     zstd = std(tempData(:));
-    %processedData = cellfun(@(x) arrayfun(@(x) (x-zmean)/(zstd), x), processedData,'UniformOutput',false);
+    processedData = cellfun(@(x) arrayfun(@(x) (x-zmean)/(zstd), x), processedData,'UniformOutput',false);
     vispu_new(iunit).processedData = processedData(:);
 
     % for gpfa

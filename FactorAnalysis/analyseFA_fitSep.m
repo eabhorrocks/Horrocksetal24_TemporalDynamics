@@ -247,8 +247,8 @@ plot(allStat_mean, allRun_mean,'ko')
 
 
 plot([0 0.0035],[0 0.0035],'k:')
-xlim([0 0.0005])
-ylim([0 0.0005])
+xlim([0 0.0035])
+ylim([0 0.0035])
 
 figure, hold on
 plot([0 0.006],[0 0.006],'k:')
@@ -267,8 +267,8 @@ for ispeed = 1:6
 
 end
 
-xlim([0 0.002])
-ylim([0 0.002])
+xlim([0 0.006])
+ylim([0 0.006])
 
 
 %% Speed and acceleration of tarjectories
@@ -332,7 +332,7 @@ figure, hold on
 shadedErrorBar(-190:10:1795, mean(allRun,1), sem(allRun,1),'lineProps', 'r')
 shadedErrorBar(-190:10:1795, mean(allStat,1), sem(allStat,1))
 
-ylim([0 4])
+ylim([0 25])
 xlim([-200 1800])
 ax=gca; ax.XTick = -200:200:1800;
 defaultAxesProperties(gca, true)
@@ -649,7 +649,54 @@ xlim([-200 1800])
 ylim([0 160])
 defaultAxesProperties(gca, true)
 
+%% spectrum of acclerations
+freqBandThresh = 6;
 
+for isesh = 1:5
+    for icond = 1:12
+        [s(isesh).session.s.cond(icond).accPower,f] = pspectrum(s(isesh).session.s.cond(icond).speedAcc,100,'FrequencyLimits',[0 20],'FrequencyResolution',2);
+        s(isesh).session.s.cond(icond).relPower = s(isesh).session.s.cond(icond).accPower/mean(s(isesh).session.s.cond(icond).accPower);
+        s(isesh).session.s.cond(icond).lowPower = mean(s(isesh).session.s.cond(icond).relPower(1:find(f<freqBandThresh,1,'last')));
+        s(isesh).session.s.cond(icond).highPower = mean(s(isesh).session.s.cond(icond).relPower(find(f>freqBandThresh,1,'first'):end));
+
+    end
+end
+
+allStat=[];
+allRun=[];
+
+allStatLow=[];
+allRunLow=[];
+
+allStatHigh=[];
+allRunHigh=[];
+
+for isesh = 1:5
+    for icond = 1:6
+
+        allStat = cat(2,allStat,s(isesh).session.s.cond(icond).relPower);
+        allRun = cat(2,allRun,s(isesh).session.s.cond(icond+6).relPower);
+
+        allStatLow = cat(1,allStatLow,s(isesh).session.s.cond(icond).lowPower);
+        allRunLow = cat(1,allRunLow,s(isesh).session.s.cond(icond+6).lowPower);
+
+        allStatHigh = cat(1,allStatHigh,s(isesh).session.s.cond(icond).highPower);
+        allRunHigh = cat(1,allRunHigh,s(isesh).session.s.cond(icond+6).highPower);
+
+    end
+end
+
+figure, hold on
+shadedErrorBar(f, mean(allStat,2), sem(allStat,2));
+shadedErrorBar(f, mean(allRun,2), sem(allRun,2),'lineProps','r');
+
+figure
+subplot(121), hold on
+bar([1, 2], [mean(allStatLow),mean(allRunLow)]);
+errorbar(1:2,[mean(allStatLow),mean(allRunLow)], [sem(allStatLow),sem(allRunLow)], 'lineStyle','none')
+subplot(122), hold on
+bar([1, 2], [mean(allStatHigh),mean(allRunHigh)])
+errorbar(1:2,[mean(allStatHigh),mean(allRunHigh)], [sem(allStatHigh),sem(allRunHigh)],'lineStyle','none')
 
 
 
@@ -883,3 +930,48 @@ xlim([0 5]), ylim([0 5])
 ax = gca; ax.XTick = log2([1 2 4 8 16 32]); ax.YTick = ax.XTick;
 ax.XTickLabel = [1 2 4 8 16 32]; ax.YTickLabel = ax.XTickLabel;
 defaultAxesProperties(gca, true)
+
+
+
+%% analyse  'dynamic range' of trajectories
+
+
+for isession = 1:5
+    stat = s(isession).session.s.cond(1:6);
+    run = s(isession).session.s.cond(7:12);
+%     weights = s(isession).session.s.propSharedVariance';
+%     weights=ones(size(weights));
+    clear statWeight runWeight
+
+    for iint = 1:200
+        for ispeed1 =1:6
+            for ispeed2 = 1:6
+                statWeight(iint,ispeed1,ispeed2) = sqrt(sum((stat(ispeed1).meanTrajectory(iint,:)-stat(ispeed2).meanTrajectory(iint,:)).^2));
+                runWeight(iint,ispeed1,ispeed2) = sqrt(sum((run(ispeed1).meanTrajectory(iint,:)-run(ispeed2).meanTrajectory(iint,:)).^2));
+            end
+        end
+
+        statWeight(iint,:,:) = setUpperTri2NaN(squeeze(statWeight(iint,:,:)));
+        runWeight(iint,:,:) = setUpperTri2NaN(squeeze(runWeight(iint,:,:)));
+
+    end
+
+    s(isession).session.stat.pairRangeDists = nanmean(statWeight,[2,3]);
+    s(isession).session.run.pairRangeDists = nanmean(runWeight,[2,3]);
+
+end
+
+allStat=[];
+allRun=[];
+for isession =1:5
+    allStat=cat(2,allStat,s(isession).session.stat.pairRangeDists);
+    allRun=cat(2,allRun,s(isession).session.run.pairRangeDists);
+end
+
+figure, hold on
+shadedErrorBar(-195:10:1795, mean(allStat,2), sem(allStat,2))
+shadedErrorBar(-195:10:1795, mean(allRun,2), sem(allRun,2), 'lineProps', 'r')
+xlim([-200 1800])
+ax=gca; ax.XTick = -200:200:1800;
+defaultAxesProperties(gca, true)
+xlabel('Time'), ylabel('Mean distance between speed-mean trajectories')

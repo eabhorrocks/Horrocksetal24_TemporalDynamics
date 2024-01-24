@@ -21,7 +21,7 @@ end
 
 %%
 
-allUnits = cat(1,session.units);
+allUnits = cat(1,session([1 2 4 5]).units);
 goodUnits = allUnits([allUnits.isi_viol]<=0.1...
     & [allUnits.amplitude_cutoff]<=0.1 & [allUnits.amplitude]>=50 & [allUnits.firing_rate]>=0);
 

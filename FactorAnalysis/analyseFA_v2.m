@@ -12,7 +12,7 @@ s = struct;
 
 for isession = 1:5
     tic
-    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_FAsmooth_Mar23.mat'];
+    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_FA_normal.mat'];
 
     load(fullfile(dataDir,fname))
 
@@ -20,6 +20,23 @@ for isession = 1:5
 end
 
 
+%% plot explaained variance
+ figure, hold on
+for isession = 1:5
+plot(cumsum(s(isession).session.s.propSharedVariance),'LineStyle','-','Marker','.')
+end
+legend({'1,','2','3','4','5'})
+
+
+figure, hold on
+for isession = 1:5
+t(isession).sv = cumsum(s(isession).session.s.propSharedVariance);
+end
+
+allSV = padcat(t.sv,2);
+allSV=allSV(:,1:5);
+
+errorbar(1:size(allSV,1),nanmean(allSV,2), nansem(allSV,2))
 %% get distance metrics with no weights
 
 bin_N = 1; % bin every N elements
@@ -31,8 +48,8 @@ nWins = 10; % number of consecutive windows required to reach steady state
 for isession = 1:5
 
     % set parameters
-    % weights = s.propSharedVariance(:)'; % weights are frac. of shared variance explained by each component
-    weights = repelem(1, 1, s(isession).session.s.qOpt);
+    weights = s(isession).session.s.propSharedVariance(1:s(isession).session.s.qOpt)'; % weights are frac. of shared variance explained by each component
+    %weights = repelem(1, 1, s(isession).session.s.qOpt);
     cond = s(isession).session.s.cond;
 
     % onset trajectories
@@ -116,8 +133,8 @@ for isession = 1:5
     statCDoff  =cat(1, statCDoff, s(isession).session.stat.offset_cumulativeDistanceTravelled);
     runCDoff  =cat(1, runCDoff, s(isession).session.run.offset_cumulativeDistanceTravelled);
 
-    statPerf  =cat(1, statPerf, s(isession).session.stat.meanPerf);
-    runPerf  =cat(1, runPerf, s(isession).session.run.meanPerf);
+   % statPerf  =cat(1, statPerf, s(isession).session.stat.meanPerf);
+   % runPerf  =cat(1, runPerf, s(isession).session.run.meanPerf);
 
 end
 

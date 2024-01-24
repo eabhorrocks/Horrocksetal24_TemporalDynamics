@@ -11,7 +11,7 @@ dataDir = 'C:\Users\edward.horrocks\Documents\Code\V1Dynamics\Data\basic_111022'
 
 
 for isession = 1:size(sessionTags,1)
-    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_PSTH_noEye.mat']; %PSTH_noEye %psth3rds
+    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_PSTH_strict_noDownSamp.mat']; %PSTH_noEye %psth3rds
 
     load(fullfile(dataDir,fname))
     [units.session] = deal(isession);
@@ -23,7 +23,7 @@ end
 
 %%
 
-allUnits = cat(1,session.units);
+allUnits = cat(1,session([1 2 4 5]).units);
 goodUnits = allUnits([allUnits.isi_viol]<=0.1...
     & [allUnits.amplitude_cutoff]<=0.1 & [allUnits.amplitude]>=50 & [allUnits.firing_rate]>=0);
 
@@ -353,14 +353,16 @@ binEdges = 0:0.02:1;
 statVals = stat.(metric_name);
 runVals = run.(metric_name);
 
-statSmallVals = statSmall.(metric_name);
-statBigVals = statBig.(metric_name);
 
 
 figure, hold on
 scatter_kde(statVals(bothGoodVals), runVals(bothGoodVals), 'filled', 'MarkerSize', 6)
 plot([binEdges(1) binEdges(end)], [binEdges(1) binEdges(end)], 'r')
 xlabel('stat'), ylabel('run')
+
+
+statSmallVals = statSmall.(metric_name);
+statBigVals = statBig.(metric_name);
 
 figure, hold on
 scatter_kde(statSmallVals(bothStatGoodVals), statBigVals(bothStatGoodVals), 'filled', 'MarkerSize', 6)
