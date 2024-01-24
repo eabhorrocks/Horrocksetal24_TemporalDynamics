@@ -9,7 +9,7 @@ sessionTags = {'M22027', '20220517';...
 
 %%
 
-saveSuffix = 'FA_fitSep.mat';
+saveSuffix = 'LDAsingle_cp.mat';
 inputSuffix = 'basic.mat';
 
 tic
@@ -22,11 +22,11 @@ parfor isession = 1:size(sessionTags,1)
 %      processSession_PSTH(inputFileName,outputFileName,dataDir) 
     % processSession_r2overTime(inputFileName,outputFileName,dataDir)
     % processSession_correlationAnalysis_v2(inputFileName,outputFileName,dataDir)
-    % processSession_decoding(inputFileName,outputFileName,dataDir)
+     processSession_decoding(inputFileName,outputFileName,dataDir)
     %processSession_popAnalysis(inputFileName,outputFileName,dataDir)
     % processSession_FAoverTime(inputFileName,outputFileName,dataDir)
 
-    processSession_popAnalysis_fitSep(inputFileName,outputFileName,dataDir)
+    %processSession_popAnalysis_fitSep(inputFileName,outputFileName,dataDir)
 
 
 
