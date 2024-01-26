@@ -133,11 +133,11 @@ end
 
 
     case 'FastSlowLoco' % split run ttrials according to quantiled run speed
-        tempTrials = tsd(cellfun(@(x) prop(x>0.5)>=0.75 & mean(x)>3, {tsd.WheelSpeed}));
+        te = tsd(cellfun(@(x) prop(x>0.5)>=0.75 & mean(x)>3, {tsd.WheelSpeed}));
 
-            q = quantile([tempTrials.MeanStimRunSpeed],3); % split into quartiles, discard middle
-            statTrials = tempTrials([tempTrials.MeanStimRunSpeed]<=q(1)); % fake 'stat' name
-            runTrials = tempTrials([tempTrials.MeanStimRunSpeed]>=q(3));
+            q = quantile([runTrials.MeanStimRunSpeed],3);
+            statTrials = runTrials([runTrials.MeanStimRunSpeed]<=q(1)); % fake 'stat' name
+            runTrials = runTrials([])
 
 
 end

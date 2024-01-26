@@ -25,7 +25,7 @@ tsd = tsd([tsd.numDots1]==573); % remove blnk trials.
 
 %% split trials according to behavioural state
 
-stateTrialType = 'changepoints'; % 'normal', 'strict', 'changepoints'
+stateTrialType = 'normal'; % 'normal', 'strict', 'changepoints'
 
 switch stateTrialType
     case 'normal'

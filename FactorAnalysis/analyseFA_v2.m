@@ -12,7 +12,7 @@ s = struct;
 
 for isession = 1:5
     tic
-    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_FA_normal.mat'];
+    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_FA_normal_noz.mat'];
 
     load(fullfile(dataDir,fname))
 
@@ -20,7 +20,7 @@ for isession = 1:5
 end
 
 
-%% plot explaained variance
+%% plot explained variance
  figure, hold on
 for isession = 1:5
 plot(cumsum(s(isession).session.s.propSharedVariance),'LineStyle','-','Marker','.')
@@ -28,15 +28,15 @@ end
 legend({'1,','2','3','4','5'})
 
 
-figure, hold on
-for isession = 1:5
-t(isession).sv = cumsum(s(isession).session.s.propSharedVariance);
-end
-
-allSV = padcat(t.sv,2);
-allSV=allSV(:,1:5);
-
-errorbar(1:size(allSV,1),nanmean(allSV,2), nansem(allSV,2))
+% figure, hold on
+% for isession = 1:5
+% t(isession).sv = cumsum(s(isession).session.s.propSharedVariance);
+% end
+% 
+% allSV = padcat(t.sv,2);
+% allSV=allSV(:,1:5);
+% 
+% errorbar(1:size(allSV,1),nanmean(allSV,2), nansem(allSV,2))
 %% get distance metrics with no weights
 
 bin_N = 1; % bin every N elements
@@ -711,7 +711,7 @@ meanRun = mean(allRun(21:121,:),1);
 %% average decoding performance
 
 % plot average decoding performance
-bmp = -150:10:1750; bmp(end) = [];
+bmp = -175:10:1775; bmp(end) = [];
 
 allStat = [];
 allRun = [];

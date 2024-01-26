@@ -7,12 +7,12 @@ sessionTags = {'M22027', '20220517';...
     'M22033', '20220706'};
 
 dataDir = 'C:\Users\edward.horrocks\Documents\Code\V1Dynamics\Data\basic_111022';
- dataDir = 'E:\V1Data\Data\basic_111022';
+% dataDir = 'E:\V1Data\Data\basic_111022';
 
 
 for isession = 1:size(sessionTags,1)
     isession
-    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_', 'LDA_GammaONE_100ms.mat']; %_cumulativeDiscrimAnalysis
+    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_', 'LDAsingle_cp.mat']; %_cumulativeDiscrimAnalysis
 
     load(fullfile(dataDir,fname))
 

@@ -9,20 +9,20 @@ sessionTags = {'M22027', '20220517';...
 
 %%
 
-saveSuffix = 'LDAsingle_cp.mat';
+saveSuffix = 'test.mat';
 inputSuffix = 'basic.mat';
 
 tic
-parfor isession = 1:size(sessionTags,1)
+for isession = 1:size(sessionTags,1)
     isession
     
     inputFileName = [sessionTags{isession,1},'_', sessionTags{isession,2},'_', inputSuffix];
     outputFileName = [sessionTags{isession,1},'_', sessionTags{isession,2},'_', saveSuffix];
 
-%      processSession_PSTH(inputFileName,outputFileName,dataDir) 
+      processSession_PSTH(inputFileName,outputFileName,dataDir) 
     % processSession_r2overTime(inputFileName,outputFileName,dataDir)
     % processSession_correlationAnalysis_v2(inputFileName,outputFileName,dataDir)
-     processSession_decoding(inputFileName,outputFileName,dataDir)
+     %processSession_decoding(inputFileName,outputFileName,dataDir)
     %processSession_popAnalysis(inputFileName,outputFileName,dataDir)
     % processSession_FAoverTime(inputFileName,outputFileName,dataDir)
 

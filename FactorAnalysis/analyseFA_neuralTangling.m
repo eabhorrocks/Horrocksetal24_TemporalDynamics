@@ -13,7 +13,7 @@ s = struct;
 
 for isession = 1:5
     tic
-    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_FA_strict_downsamp_z.mat'];
+    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_FA_normal.mat'];
 
     load(fullfile(dataDir,fname))
 
@@ -211,6 +211,13 @@ end
 
 %% RM-anova for tangling
 
+allStat=[];
+allRun=[];
+for isesh=1:5
+    allStat = cat(1,allStat,sesh(isesh).speed.statLocalTangling);
+    allRun = cat(1,allRun,sesh(isesh).speed.runLocalTangling);
+end
+
 time = 1:180;
 statVals = allStat';
 runVals = allRun';
@@ -224,7 +231,7 @@ stateVec = categorical(repelem(1:2,1,numel(statVals))');
 % [p,tbl,stats,terms] = anovan(allVals,{timeVec,stateVec,subjVec},'model',2,'random',3,'varnames',{'Time','State','Subj'});
 
 
-[p,tbl,stats,terms] = anovan(allVals,{timeVec,stateVec,subjVec,speedVec},'model','full','varnames',{'Time','State','Subj','Speed'});
+% [p,tbl,stats,terms] = anovan(allVals,{timeVec,stateVec,subjVec,speedVec},'model','full','varnames',{'Time','State','Subj','Speed'});
 
 
 %% scatter of mean tangling
@@ -249,8 +256,8 @@ for ispeed = 1:6
         allStat = cat(1,allStat,sesh(isesh).speed(ispeed).statLocalTangling);
         allRun = cat(1,allRun,sesh(isesh).speed(ispeed).runLocalTangling);
     end
-    allStat_mean = mean(allStat(:,21:71),2);
-    allRun_mean = mean(allRun(:,21:71),2);
+    allStat_mean = mean(allStat(:,21:121),2);
+    allRun_mean = mean(allRun(:,21:121),2);
 
     plot(allStat_mean, allRun_mean,'o','MarkerEdgeColor','none','MarkerFaceColor',speedcols(ispeed,:))
 
@@ -258,3 +265,19 @@ end
 
 xlim([0 0.002])
 ylim([0 0.002])
+
+
+
+%%
+
+
+for isesh=1:5
+    figure
+    allStat=[];
+    allRun=[];
+    allStat = cat(1,allStat,sesh(isesh).speed.statLocalTangling);
+    allRun = cat(1,allRun,sesh(isesh).speed.runLocalTangling);
+    shadedErrorBar(-95:10:1695, mean(allStat,1), sem(allStat,1))
+    shadedErrorBar(-95:10:1695, mean(allRun,1), sem(allRun,1),...
+        'lineProps','r')
+end
