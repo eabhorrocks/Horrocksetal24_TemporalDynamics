@@ -11,6 +11,7 @@ Note: some of the processSession functions may take over an hour to run. We enco
 
 # Instructions
 Simply download this repository and the zipped data file (XXX_basic.mat files for each session).
+Dataset available at https://figshare.com/articles/dataset/Data_for_Horrocks_et_al_2024/26031226/1
 
 # Requirements
 Tested using Matlab 2022a
