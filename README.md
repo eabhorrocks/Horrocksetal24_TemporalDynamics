@@ -1,3 +1,7 @@
+# Flexible neural population dynamics govern the speed and stability of sensory encoding in mouse visual cortex
+
+Please cite the paper if you use the code in this repo!
+
 # Code structure
 
 - 'processSession_XXX' processes the 'basic.mat' file for each session.
