@@ -372,7 +372,7 @@ end
 % if diag performance is < chance, then all values must be nan for that
 % if train/test is < chance but diag is > chance, then values should be 0.
 
-threshPerf = 0.2083;
+threshPerf = 1/6;
 
 for isession = 1:5
     figure

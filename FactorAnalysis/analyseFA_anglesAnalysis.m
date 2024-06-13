@@ -13,7 +13,7 @@ s = struct;
 
 for isession = 1:5
     tic
-    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_FA_strict_downsamp_z.mat'];
+    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_FA_normal.mat'];
 
     load(fullfile(dataDir,fname))
 

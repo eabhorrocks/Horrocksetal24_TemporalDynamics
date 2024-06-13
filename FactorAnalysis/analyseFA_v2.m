@@ -12,7 +12,7 @@ s = struct;
 
 for isession = 1:5
     tic
-    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_FA_normal_noz.mat'];
+    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_FA_normal.mat'];
 
     load(fullfile(dataDir,fname))
 
@@ -23,20 +23,40 @@ end
 %% plot explained variance
  figure, hold on
 for isession = 1:5
+totalSV(isession) = s(isession).session.s.SV;
 plot(cumsum(s(isession).session.s.propSharedVariance),'LineStyle','-','Marker','.')
+%plot(s(isession).session.s.propSharedVariance,'LineStyle','-','Marker','.')
+
 end
 legend({'1,','2','3','4','5'})
+%%
 
+figure, hold on
+for isession = 1:5
+t(isession).sv = cumsum(s(isession).session.s.propSharedVariance);
+t(isession).nsv = s(isession).session.s.propSharedVariance;
 
-% figure, hold on
-% for isession = 1:5
-% t(isession).sv = cumsum(s(isession).session.s.propSharedVariance);
-% end
+end
+
+allSV = padcat(t.nsv,2);
+allSV=allSV(:,1:5);
+% allSV = allSV.*totalSV;
+
+figure
+errorbar(1:size(allSV,1),nanmean(allSV,2), nansem(allSV,2))
+
+figure
+shadedErrorBar(1:size(allSV,1),nanmean(allSV,2), nansem(allSV,2))
+
+%
+figure
+errorbar(1:size(allSV,1),nanmean(allSV,2), nansem(allSV,2),'lineStyle','-','Color','k','Marker','.')
+
 % 
-% allSV = padcat(t.sv,2);
-% allSV=allSV(:,1:5);
-% 
-% errorbar(1:size(allSV,1),nanmean(allSV,2), nansem(allSV,2))
+% figure
+% shadedErrorBar(1:size(allSV,1),nanmean(allSV,2), nansem(allSV,2),'lineProps','k.-')
+% errorbar(1:size(allSV,1),nanmean(allSV,2), nansem(allSV,2),'lineStyle','-','Color','k','Marker','.')
+
 %% get distance metrics with no weights
 
 bin_N = 1; % bin every N elements
@@ -48,8 +68,8 @@ nWins = 10; % number of consecutive windows required to reach steady state
 for isession = 1:5
 
     % set parameters
-    weights = s(isession).session.s.propSharedVariance(1:s(isession).session.s.qOpt)'; % weights are frac. of shared variance explained by each component
-    %weights = repelem(1, 1, s(isession).session.s.qOpt);
+    %weights = s(isession).session.s.propSharedVariance(1:s(isession).session.s.qOpt)'; % weights are frac. of shared variance explained by each component
+    weights = repelem(1, 1, s(isession).session.s.qOpt);
     cond = s(isession).session.s.cond;
 
     % onset trajectories
@@ -295,7 +315,78 @@ errorbar(1:2, mean([statCDoff(:),runCDoff(:)],1), sem([statCDoff(:),runCDoff(:)]
 ylabel('Distance Travelled')
 defaultAxesProperties(gca, false)
 
+%% box plot versions
 
+statVals = statDD;
+runVals = runDD;
+
+cols_cellArray = {[0 0 0], [1 0 1]};
+allVals = [statVals(:), runVals(:)];
+xvals = [1, 2];
+
+figure, hold on
+for ival = 1:numel(statVals)
+plot([1 2], [statVals(ival), runVals(ival)],'Color',[.7 .7 .7],'LineStyle','-',...
+    'Marker', 'o');
+end
+boxplot(allVals,'Colors','kr')
+ylabel('onsetDD')
+ylim([0 16])
+defaultAxesProperties(gca, true)
+
+
+statVals = statDDoff;
+runVals = runDDoff;
+
+cols_cellArray = {[0 0 0], [1 0 1]};
+allVals = [statVals(:), runVals(:)];
+xvals = [1, 2];
+
+figure, hold on
+for ival = 1:numel(statVals)
+plot([1 2], [statVals(ival), runVals(ival)],'Color',[.7 .7 .7],'LineStyle','-',...
+    'Marker', 'o');
+end
+boxplot(allVals,'Colors','kr')
+ylabel('offsetDD')
+ylim([0 16])
+defaultAxesProperties(gca, true)
+
+%%% disttance travelled %%%
+statVals = statCD;
+runVals = runCD;
+
+cols_cellArray = {[0 0 0], [1 0 1]};
+allVals = [statVals(:), runVals(:)];
+xvals = [1, 2];
+
+figure, hold on
+for ival = 1:numel(statVals)
+plot([1 2], [statVals(ival), runVals(ival)],'Color',[.7 .7 .7],'LineStyle','-',...
+    'Marker', 'o');
+end
+boxplot(allVals,'Colors','kr')
+ylabel('dist travelled')
+ylim([0 45])
+defaultAxesProperties(gca, true)
+
+
+statVals = statCDoff;
+runVals = runCDoff;
+
+cols_cellArray = {[0 0 0], [1 0 1]};
+allVals = [statVals(:), runVals(:)];
+xvals = [1, 2];
+
+figure, hold on
+for ival = 1:numel(statVals)
+plot([1 2], [statVals(ival), runVals(ival)],'Color',[.7 .7 .7],'LineStyle','-',...
+    'Marker', 'o');
+end
+boxplot(allVals,'Colors','kr')
+ylabel('dist travlled offsett')
+ylim([0 45])
+defaultAxesProperties(gca, true)
 %% distribution plot versions
 statVals = statDD;
 runVals = runDD;
@@ -398,7 +489,6 @@ allRunJerk = [];
 
 
 for isesh = 1:5
-    weights = s(isesh).session.s.propSharedVariance';
     qOpt = s(isesh).session.s.qOpt;
     weights = repelem(1, 1, qOpt);
     nFactors = size(s(1).session.s.loadings,2);
@@ -485,7 +575,7 @@ subplot(223)
 xlim([-200 1800])
 ylim([0 12])
 defaultAxesProperties(gca, true)
-
+%
 
 
 for ispeed = 1:6
@@ -561,7 +651,7 @@ lme = fitlme(tbl, f, 'DummyVarCoding', 'reference')
 
 freqBandThresh = 6;
 
-for isesh = 1:5
+for isesh = 1
     for icond = 1:12
         [s(isesh).session.s.cond(icond).accPower,f] = pspectrum(s(isesh).session.s.cond(icond).speedAcc,100,'FrequencyLimits',[0 20],'FrequencyResolution',2);
         s(isesh).session.s.cond(icond).relPower = s(isesh).session.s.cond(icond).accPower/mean(s(isesh).session.s.cond(icond).accPower);

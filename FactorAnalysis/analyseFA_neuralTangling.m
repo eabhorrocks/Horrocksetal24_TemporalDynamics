@@ -32,7 +32,8 @@ for isesh = 1:5
         statTraj = s(isesh).session.cond(ispeed).meanTrajectory(itime,idim);
         runTraj = s(isesh).session.cond(ispeed+6).meanTrajectory(itime,idim);
         deltaT = 10;
-        epsVal = 0.1;
+        epsVal = eps;
+        
 
         Qstat=[];
         for it = 2:numel(itime)
@@ -146,7 +147,7 @@ speedcols = inferno(6);
 
 allStat=[];
 allRun=[];
-for isesh=1:5
+for isesh= 5
     allStat = cat(1,allStat,sesh(isesh).speed.statLocalTangling);
     allRun = cat(1,allRun,sesh(isesh).speed.runLocalTangling);
 end
@@ -160,9 +161,10 @@ defaultAxesProperties(gca, true)
 ylabel('Local Tangling')
 xlabel('Time (ms)')
 
+
+%% plot by speed
 figure
 
-% plot by speed
 subplot(211)
 for ispeed = 1:6
     allStat=[];
@@ -268,7 +270,7 @@ ylim([0 0.002])
 
 
 
-%%
+%% tangling by session
 
 
 for isesh=1:5
@@ -280,4 +282,20 @@ for isesh=1:5
     shadedErrorBar(-95:10:1695, mean(allStat,1), sem(allStat,1))
     shadedErrorBar(-95:10:1695, mean(allRun,1), sem(allRun,1),...
         'lineProps','r')
+end
+
+
+
+%% tangling by speed, for each session
+
+for isesh=1:5
+    figure
+    for ispeed = 1:6
+    allStat = sesh(isesh).speed(ispeed).statLocalTangling;
+    allRun= sesh(isesh).speed(ispeed).runLocalTangling; 
+    subplot(2,3,ispeed), hold on
+    shadedErrorBar(-95:10:1695, mean(allStat,1), sem(allStat,1))
+    shadedErrorBar(-95:10:1695, mean(allRun,1), sem(allRun,1),...
+        'lineProps','r')
+    end
 end

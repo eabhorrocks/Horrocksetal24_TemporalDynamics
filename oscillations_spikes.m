@@ -99,6 +99,8 @@ for isession=1:size(sessionTags,1)
 
 goodUnits = tempUnits([tempUnits.isi_viol]<=0.1...
     & [tempUnits.amplitude_cutoff]<=0.1 & [tempUnits.amplitude]>=50);
+
+clear t singleTrials
 % figure
 iplot=0;
 for ispeed = 1:6
@@ -130,7 +132,8 @@ for ispeed = 1:6
 %         plot(f,normS)
 
         t(ispeed,istate,:) = normS;
-
+        singleTrials(ispeed,istate).pow = S;
+        
     end
 end
 
@@ -148,10 +151,14 @@ shadedErrorBar(f,mean(allRun,1), sem(allRun,1),'lineProps','r')
 
 s(isession).stat = mean(allStat,1);
 s(isession).run = mean(allRun,1);
-
+s(isession).t = t;
+s(isession).singleTrials = singleTrials;
+s(isession).statTrials = cat(2,singleTrials(:,1).pow);
+s(isession).runTrials = cat(2,singleTrials(:,2).pow);
+s(isession).allTrials = cat(2,s(isession).statTrials,s(isession).runTrials);
 end
 
-% plot average of subjects
+%% plot average of subjects
 
 allStat = cat(1,s.stat);
 allRun = cat(1,s.run);
@@ -162,3 +169,89 @@ shadedErrorBar(f,mean(allRun,1), sem(allRun,1),'lineProps','r')
 xlim([1 10]);
 ylabel('Normalised power (db)')
 xlabel('Frequency (Hz)')
+
+%% by speed
+
+speedcols=inferno(6);
+
+for ispeed = 1:6
+    allStat=[];
+        allRun=[];
+
+    for isesh = 1:5
+        allStat=cat(1,allStat, squeeze(s(isesh).t(ispeed,1,:))');
+        allRun=cat(1,allRun, squeeze(s(isesh).t(ispeed,2,:))');
+    end
+    subplot(2,3,ispeed)
+    title(ispeed)
+shadedErrorBar(f,mean(allStat,1), sem(allStat,1),'lineProps','k')
+shadedErrorBar(f,mean(allRun,1), sem(allRun,1),'lineProps','r')
+end
+
+
+figure
+for ispeed = 1:6
+    allStat=[];
+        allRun=[];
+
+    for isesh = 1:5
+        allStat=cat(1,allStat, squeeze(s(isesh).t(ispeed,1,:))');
+        allRun=cat(1,allRun, squeeze(s(isesh).t(ispeed,2,:))');
+    end
+
+    subplot(121), hold on
+    shadedErrorBar(f, mean(allStat), sem(allStat), 'lineProps',{'Color', speedcols(ispeed,:)});
+    
+    subplot(122), hold on
+    shadedErrorBar(f, mean(allRun), sem(allRun), 'lineProps',{'Color', speedcols(ispeed,:)});
+
+end
+
+
+%% plot single trial powers
+
+for isession = 1:5;
+fRange = [2 6];
+[~, idx(1)] = min(abs(f-fRange(1))); [~, idx(2)] = min(abs(f-fRange(2)));
+idxRange = idx(1):idx(2);
+
+fRangePower = mean(s(isession).statTrials(idxRange,:),1);
+figure
+histogram(fRangePower,'BinWidth',0.01) 
+xlabel([num2str(fRange) ' rel pow.'])
+title(num2str(isession))
+
+end
+
+%%
+isession = 2;
+fRange = [2 6];
+[~, idx(1)] = min(abs(f-fRange(1))); [~, idx(2)] = min(abs(f-fRange(2)));
+idxRange = idx(1):idx(2);
+
+threshold = 0.055;
+allTrials = s(isession).statTrials;
+meanPerf = mean(allTrials,1);
+relPerf = allTrials./meanPerf;
+
+fRangePower = mean(relPerf(idxRange,:),1);
+
+nTrials = numel(fRangePower);
+
+quants = quantile(fRangePower,4);
+
+%[~, maxindex] = maxk(fRangePower,40);
+%[~, minindex] = mink(fRangePower,40);
+
+minindex = find(fRangePower<quants(1));
+maxindex = find(fRangePower>quants(4));
+
+figure, 
+subplot(211), hold on
+plot(f,s(isession).allTrials(:,minindex),'m')
+plot(f,s(isession).allTrials(:,maxindex),'c')
+
+subplot(212), hold on
+shadedErrorBar(f,mean(s(isession).allTrials(:,minindex),2), sem(s(isession).allTrials(:,minindex),2),'lineProps','m')
+shadedErrorBar(f,mean(s(isession).allTrials(:,maxindex),2), sem(s(isession).allTrials(:,maxindex),2),'lineProps','c')
+

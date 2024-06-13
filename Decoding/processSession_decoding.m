@@ -20,7 +20,7 @@ tsd(invalidDurs_idx)=[];
 tsd = tsd([tsd.Contrast1]==1 & [tsd.numDots1]==573); % only using full contrast trials
 
 
-stateTrialType = 'changepoints'; % 'normal', 'strict', 'changepoints'
+stateTrialType = 'normal'; % 'normal', 'strict', 'changepoints'
 
 switch stateTrialType
     case 'normal'

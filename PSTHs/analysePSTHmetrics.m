@@ -23,7 +23,10 @@ end
 
 %%
 
-allUnits = cat(1,session([1 2 4 5]).units);
+sesh2use = [1 2 3 4 5];
+
+
+allUnits = cat(1,session(sesh2use).units);
 goodUnits = allUnits([allUnits.isi_viol]<=0.1...
     & [allUnits.amplitude_cutoff]<=0.1 & [allUnits.amplitude]>=50 & [allUnits.firing_rate]>=0);
 
@@ -53,6 +56,7 @@ pyr_idx = find(~ismember(1:numel(goodUnits), [narrow_idx,wide_idx]));
 dopupilcomp = false;
 
 stat.session = [];
+stat.unit=[];
 stat.speedVec = [];
 stat.stateVec = [];
 stat.psthVec = [];
@@ -83,6 +87,7 @@ stat.peakCorrecVec = [];
 
 
 run.session = [];
+run.unit=[];
 run.speedVec = [];
 run.stateVec = [];
 run.psthVec = [];
@@ -166,6 +171,7 @@ for iunit= 1:numel(goodUnits)
 
 %         psths while stationary
         stat.session = cat(1,stat.session, goodUnits(iunit).session);
+        stat.unit = cat(1,stat.unit, iunit);
         stat.speedVec = cat(1, stat.speedVec, ispeed);
         stat.stateVec = cat(1, stat.stateVec, 1);
         stat.psthVec = cat(1, stat.psthVec, goodUnits(iunit).stat_psth(ispeed).psth);
@@ -210,6 +216,7 @@ for iunit= 1:numel(goodUnits)
 
 %         psths while running
         run.session = cat(1,run.session, goodUnits(iunit).session);
+        run.unit = cat(1,run.unit, iunit);
         run.speedVec = cat(1, run.speedVec, ispeed);
         run.stateVev = cat(1, run.stateVec, 2);
         run.psthVec = cat(1, run.psthVec, goodUnits(iunit).run_psth(ispeed).psth);
@@ -340,6 +347,20 @@ legend({'statOnly', 'runOnly', 'Both', 'Neither'})
 for ispeed = 1:6
     statProp(ispeed) = prop(statGoodVals(stat.speedVec==ispeed));
     runProp(ispeed) = prop(runGoodVals(run.speedVec==ispeed)); 
+
+
+t_statGoodVals = statGoodVals(stat.speedVec==ispeed);
+t_runGoodVals = runGoodVals(run.speedVec==ispeed);
+
+x(1,1) = sum(t_statGoodVals & t_runGoodVals);
+x(1,2) = sum(t_statGoodVals & ~t_runGoodVals);
+x(2,1) = sum(~t_statGoodVals & t_runGoodVals);
+x(2,2) = sum(~t_statGoodVals & ~t_runGoodVals);
+
+
+ p(ispeed) = mcnemar(x);
+
+
 end
 figure, hold on
 plot(statProp, 'k')

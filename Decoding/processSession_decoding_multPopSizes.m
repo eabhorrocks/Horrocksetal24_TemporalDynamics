@@ -1,12 +1,13 @@
-% function processSession_decoding_multPopSizes(inputFileName,outputFileName,dataDir)
+function processSession_decoding_multPopSizes(inputFileName,outputFileName,dataDir)
 
 %% Decoding - training and testing in the same window
 
 %% load data
 
-% load(fullfile(dataDir,inputFileName))
+wheel=struct; % to prevent matlab func issue
 
-load('M22027_20220517_basic.mat')
+load(fullfile(dataDir,inputFileName))
+
 
 %% pre-process data - classify trials by behavioural state
 
@@ -36,7 +37,6 @@ switch stateTrialType
         run_idx = find(cellfun(@(x) prop(x>0.5)>=0.9 & mean(x)>3, {tsd.WheelSpeed}));
 
     case 'changepoints'
-
 
         wheelOn=[]; wheelOff=[];
         for iwheel = 1:numel(wheel)
@@ -209,64 +209,81 @@ for ispeed = 1:6
     run.cond(ispeed).catData_sc = cat(3,run.D(idx).data);
 end
 
-%% Decoding options
+
+%% decoding coarser time periods of stimulus w/ diff pop sizes
 
 options.kfold = 3;
 options.DiscrimType='linear';
-nPerms = 1;
-windowSize=10;
+nPerms = 3;
+options.OptimizeHyperparameters = {'delta','gamma'};
+options.Gamma=[];
+options.useParallel = false;
+nWorkers = 18;
+% windowSize=10;
 
 [nTime, nUnits, nTrials] = size(stat.cond(1).catData_sc);
 tic
 
 % pop sizes
-popSizeVector = [5];% 10 20 40 80 160 320 640];
+popSizeVector = [10 20 40 80 120];
 popSizeVector(popSizeVector>nUnits)=[];
 % popSizeVector(end+1)=nUnits;
-
-
-
-
+timebins = [21:30;...
+    31:40;...
+    41:50;...
+    51:60;...
+    61:70;...
+    71:80;...
+    81:90;...
+    91:100;...
+    101:110;...
+    111:120;];
 
 tic
 for ipop = 1:numel(popSizeVector)
-    nReps = 1;%;floor(nUnits/160)*5;
-    for irep = 1:nReps
+    ipop
+    thisPopSize = popSizeVector(ipop);
+    nReps = ceil((floor(nUnits/thisPopSize)*5)./nWorkers)*nWorkers;
 
-        units2use = randperm(nUnits,popSizeVector(ipop));
+    parfor irep = 1:nReps
+
+        units2use = randperm(nUnits,thisPopSize);
+        dataStruct = [];
 
 
-        %% decoding with gamma optimised for each cross-val
-        disp('decoding with gamma optimised')
-        options.OptimizeHyperparameters = {'delta', 'gamma'};
-        options.Gamma=[];
+        for iperm = 1:5
+            iperm
 
-        for iperm = 1:nPerms
-            %iperm
+            trainidx = randperm(nTrials,nTrain);
+            testidx = find(~ismember(1:nTrials,trainidx));%             iperm
+
+
+
             %%% stat %%%
-
-            for iint = 1:nTime-(windowSize-1)
-                bin2use = iint:(iint+(windowSize-1));
-                dataStruct = [];
+            %             disp('stat')
+            for iint = 1:size(timebins,1)
+                bin2use = timebins(iint,:);
                 for ispeed = 1:6
                     dataStruct(ispeed).data = stat.cond(ispeed).catData_sc(bin2use,units2use,:); %
                 end
-                [popSize(ipop).rep(irep).stat.perm(iperm).meanPerf(iint), ~,~,...
+                [rep(irep).stat.perm(iperm).meanPerf(iint), ~,~,...
                     ~] = do_cvDA(dataStruct,options);
             end
 
             %%% run %%%
-
-            for iint = 1:nTime-(windowSize-1)
-                bin2use = iint:(iint+(windowSize-1));
+            %             disp('run')
+            for iint = 1:size(timebins,1)
+                bin2use = timebins(iint,:);
                 dataStruct = [];
                 for ispeed = 1:6
                     dataStruct(ispeed).data = run.cond(ispeed).catData_sc(bin2use,units2use,:); %
                 end
-                [popSize(ipop).rep(irep).run.perm(iperm).meanPerf(iint), ~,~,...
+                [rep(irep).run.perm(iperm).meanPerf(iint), ~,~,...
                     ~] = do_cvDA(dataStruct,options);
             end
 
+            stat_shufDataStruct=struct;
+            run_shufDataStruct=struct;
 
             for ispeed = 1:6
                 shufOrder = [];
@@ -289,51 +306,60 @@ for ipop = 1:numel(popSizeVector)
             end
 
             %%% do the shuffled-trial decoding %%%
-            for iint = 1:200-(windowSize-1)
-                bin2use = iint:(iint+(windowSize-1));
+            %             disp('stat shuf')
+            for iint = 1:size(timebins,1)
+                bin2use = timebins(iint,:);
+                tempDataStruct=struct;
                 for ispeed = 1:6
                     tempDataStruct(ispeed).data = stat_shufDataStruct(ispeed).data(bin2use,units2use,:); %
                 end
 
-                [popSize(ipop).rep(irep).statShuf.perm(iperm).meanPerf(iint), ~,~,...
+                [rep(irep).statShuf.perm(iperm).meanPerf(iint), ~,~,...
                     ~]  = do_cvDA(tempDataStruct,options);
-                clear tempDataStruct
+                %                 clear tempDataStruct
             end
 
+            %             disp('run shuf')
+            for iint = 1:size(timebins,1)
+                bin2use = timebins(iint,:);
+                tempDataStruct=struct;
 
-            for iint = 1:200-(windowSize-1)
-                bin2use = iint:(iint+(windowSize-1));
                 for ispeed = 1:6
                     tempDataStruct(ispeed).data = run_shufDataStruct(ispeed).data(bin2use,units2use,:); %
                 end
 
-                [popSize(ipop).rep(irep).runShuf.perm(iperm).meanPerf(iint), ~,~,...
+                [rep(irep).runShuf.perm(iperm).meanPerf(iint), ~,~,...
                     ~]  = do_cvDA(tempDataStruct,options);
-                clear tempDataStruct
+                %                 clear tempDataStruct
+
             end
-
-
 
         end
 
 
     end
 
-end
+    popSize(ipop).rep = rep;
+    popSize(ipop).nUnits = thisPopSize;
 
+end
 toc
+
+
 %% save data
 
-% session.stat = stat;
-% session.run = run;
-% session.goodUnits = goodUnits;
-%
-% dummyVar=[];
-% save(fullfile(dataDir,outputFileName),'dummyVar', 'session', '-v7.3')
-%
-% % end
-%
-%
+session.stat = stat;
+session.run = run;
+session.goodUnits = goodUnits;
+session.popSize = popSize;
+
+dummyVar=[];
+
+save(fullfile(dataDir,outputFileName),'dummyVar', 'session', '-v7.3')
+
+end
+
+
 
 
 

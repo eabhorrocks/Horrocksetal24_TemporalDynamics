@@ -103,6 +103,8 @@ axis equal
 defaultAxesProperties(gca, true)
 colormap(viridis)
 
+
+
 valsVec = cat(1,allTunedStart_valid(:,1), allTunedStart_valid(:,2));
 unitVec = categorical(cat(2,1:size(allTunedStart_valid,1), 1:size(allTunedStart_valid,1))');
 stateVec = categorical(cat(1,repelem(1,size(allTunedStart_valid,1),1), repelem(2,size(allTunedStart_valid,1),1)));
@@ -182,7 +184,28 @@ tbl = table(valsVec,unitVec,stateVec,seshVec,...
     f = 'vals ~ state + (1|unit) + (1|sesh)';
       
     lme = fitlme(tbl, f, 'DummyVarCoding', 'reference')
+   
 
+   %% box plots
+
+figure, hold on
+boxplot([allTunedStart_valid(:,1), allTunedStart_valid(:,2)],'Colors','kr',...
+    'ExtremeMode','compress','Jitter',0.75,'Whisker',2)
+ylabel('Tuning Start Time')
+ylim([0 1.8])
+defaultAxesProperties(gca, true)
+figure
+boxplot([allTunedFinish_valid(:,1), allTunedFinish_valid(:,2)],'Colors','kr',...
+    'ExtremeMode','compress','Jitter',0.75,'Whisker',2)
+ylabel('Tuning Finish Time')
+ylim([0 1.8])
+defaultAxesProperties(gca, true)
+figure
+boxplot([allTunedDuration_valid(:,1), allTunedDuration_valid(:,2)]./100,'Colors','kr',...
+    'ExtremeMode','compress','Jitter',0.75,'Whisker',2)
+ylabel('Tuning Durataion')
+ylim([0 1.8])
+defaultAxesProperties(gca, true)
 
 %% proportion tuned over time
 
@@ -672,7 +695,10 @@ end
 binVector = -200:10:1790;
 r2binVector = -100:10:1700;
 
-thisUnit = tempUnits(239);
+t2 = session(2).units;
+theseUnits = t2([t2.isi_viol]<=0.1 & [t2.amplitude_cutoff]<=0.1 & [t2.amplitude]>=50);
+
+thisUnit = theseUnits(239);
 
 
 figure,

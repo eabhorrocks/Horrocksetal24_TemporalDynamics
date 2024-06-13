@@ -196,6 +196,7 @@ end
 % use only good units
 units = tempUnits([tempUnits.isi_viol]<=0.1...
     & [tempUnits.amplitude_cutoff]<=0.1 & [tempUnits.amplitude]>=50);
+
 %% preprocess data
 
 minFR = 1;
@@ -219,6 +220,9 @@ for iunit =1:numel(units)
     binnedData = units(iunit).(scName);
     % sqrt and smooth data for FA
     processedData = cellfun(@(x) smoothdata(sqrt(x), 1, 'gaussian', smoothWidth/(bin_N*binSize)), binnedData,'UniformOutput', false);
+    %processedData = cellfun(@(x) smoothdata(x, 1, 'gaussian', smoothWidth/(bin_N*binSize)), binnedData,'UniformOutput', false);
+
+    
     % get average for calculting mean firing rate
     average_smooth = cellfun(@(x) smoothdata(mean(x,2),'gaussian', smoothWidth/(bin_N*binSize)), binnedData, 'UniformOutput', false);
 

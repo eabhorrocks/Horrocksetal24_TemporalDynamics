@@ -111,6 +111,7 @@ end
 
 
 %% plot fractional performance of different train test windows
+binVector = -150:100:1750;
 
 allStat = cat(3,session.meanStat);
 allRun = cat(3,session.meanRun);
@@ -141,8 +142,8 @@ end
 
 % if diag performance is < chance, then all values must be nan for that
 % if train/test is < chance but diag is > chance, then values should be 0.
-
-threshPerf = 0.2083;
+binVector = -0.15:0.1:1.75;
+threshPerf = 1/6%0.2083;
 
 for isession = 1:5
     figure
@@ -311,14 +312,15 @@ shadedErrorBar(4:12, mean(fracDiffVals(:,4:12)), sem(fracDiffVals(:,4:12)),'line
 plot([4 12], [ 1 1], 'k:')
 ax = gca; ax.XTick = 4:12; ax.XTickLabel = 150:100:950;
 defaultAxesProperties(gca, true)
-%% bar chart of performance for decoder trained 100-200ms
+  %% bar chart of performance for decoder trained 100-200ms
 figure, hold on
 bar([1 2], [mean(allStat(:,trainIdx)), mean(allRun(:,trainIdx))])
-% for isesh = 1:5
-%     plot([1 2], [allStat(isesh,trainIdx), allRun(isesh,trainIdx)],'k')
-% end
-errorbar(1:2, [mean(allStat(:,trainIdx)), mean(allRun(:,trainIdx))], ...
-    [sem(allStat(:,trainIdx)), sem(allRun(:,trainIdx))], 'LineStyle', 'none')
+for isesh = 1:5
+     plot([1 2], [allStat(isesh,trainIdx), allRun(isesh,trainIdx)])
+     pause
+ end
+% errorbar(1:2, [mean(allStat(:,trainIdx)), mean(allRun(:,trainIdx))], ...
+%     [sem(allStat(:,trainIdx)), sem(allRun(:,trainIdx))], 'LineStyle', 'none')
 
 
 
@@ -348,8 +350,8 @@ shadedErrorBar(bv(1:12), mean(allRun), sem(allRun),'lineProps',{'r'})
 
 %% t-test for early time window (t=100-200)
 
-timeIdx=10;
+timeIdx=4;
 
-[h, p] = adtest(allStat(:,timeIdx)-allRun(:,timeIdx));
+[h, p] = adtest(allStat(:,timeIdx)-allRun(:,timeIdx)); %p>0.05 indicates normal distribution
 
 [h p] = ttest(allStat(:,timeIdx), allRun(:,timeIdx))

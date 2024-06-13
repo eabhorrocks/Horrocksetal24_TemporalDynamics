@@ -21,7 +21,7 @@ end
 
 %%
 
-allUnits = cat(1,session([1 2 4 5]).units);
+allUnits = cat(1,session.units);
 goodUnits = allUnits([allUnits.isi_viol]<=0.1...
     & [allUnits.amplitude_cutoff]<=0.1 & [allUnits.amplitude]>=50 & [allUnits.firing_rate]>=0);
 
@@ -336,6 +336,39 @@ speedcols = inferno(6);
          'lineProps', {'Color', speedcols(ispeed,:)})
  end
 
+%% per speed
+
+figure
+for ispeed =1:6
+    subplot(2,3,ispeed), hold on
+  
+    shadedErrorBar(1:200,mean(stat.psthVec(bothGoodVals & stat.speedVec==ispeed,:),1),...
+         sem(stat.psthVec(bothGoodVals & stat.speedVec==ispeed,:),1),...
+         'lineProps', 'k')
+     shadedErrorBar(1:200,mean(run.psthVec(bothGoodVals & run.speedVec==ispeed,:),1),...
+         sem(run.psthVec(bothGoodVals & run.speedVec==ispeed,:),1),...
+         'lineProps', 'r')
+     title(ispeed)
+     ylim([0 32])
+end
+
+%% per speed/sesh
+% 
+% for isession =1:5
+% figure
+% for ispeed =1:6
+%     subplot(2,3,ispeed), hold on
+%   
+%     shadedErrorBar(1:200,mean(stat.psthVec(statGoodVals & stat.speedVec==ispeed & stat.session==isession,:),1),...
+%          sem(stat.psthVec(statGoodVals & stat.speedVec==ispeed & stat.session==isession,:),1),...
+%          'lineProps', 'k')
+%      shadedErrorBar(1:200,mean(run.psthVec(runGoodVals & run.speedVec==ispeed & run.session==isession,:),1),...
+%          sem(run.psthVec(runGoodVals & run.speedVec==ispeed & run.session==isession,:),1),...
+%          'lineProps', 'r')
+%      title(ispeed)
+%      ylim([0 32])
+% end
+% end
 
 %% do hierarchical clustering on stat responses
 
@@ -582,6 +615,7 @@ runOG = run.psthVec(bothGoodVals,:);
 %idx = find(max(statOG,[],2)>10);
 %idx = [694, 939, 983]
 idx = [1559, 983]% x1453, 983]
+idx = 1:size(statOG,1);
 figure
 for i =1:numel(idx)
     figure
@@ -590,6 +624,7 @@ for i =1:numel(idx)
     plot(runOG(idx(i),:),'r'),
     title(idx(i))
     pause
+    close
 end
 % reference on flipud plot is size(statOG,1)-idx+1 ?
 

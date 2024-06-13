@@ -12,7 +12,7 @@ dataDir = 'C:\Users\edward.horrocks\Documents\Code\V1Dynamics\Data\basic_111022'
 
 for isession = 1:size(sessionTags,1)
     isession
-    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_', 'LDAsingle_cp.mat']; %_cumulativeDiscrimAnalysis
+    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_', 'LDAsingle_normal.mat']; %_cumulativeDiscrimAnalysis
 
     load(fullfile(dataDir,fname))
 
@@ -38,8 +38,8 @@ statNormOpt=[];
 runNormOpt=[];
 
 for isession = 1:5
-    statNormOpt=cat(1,statNormOpt,mean(cat(1,session(isession).stat.GammaOne.perm.meanPerf),1));
-    runNormOpt=cat(1,runNormOpt,mean(cat(1,session(isession).run.GammaOne.perm.meanPerf),1));
+    statNormOpt=cat(1,statNormOpt,mean(cat(1,session(isession).stat.GammaOpt.perm.meanPerf),1));
+    runNormOpt=cat(1,runNormOpt,mean(cat(1,session(isession).run.GammaOpt.perm.meanPerf),1));
 end
 
 
@@ -332,19 +332,28 @@ shadedErrorBar(-190:10:1800, mean(runShuffleGammaOpt,1), sem(runShuffleGammaOpt,
 
 
 %% just gamma =1
-statGammaOne=[];
-runGammaOne=[];
 
-    for isession = 1:size(sessionTags,1)
-    statGammaOne = cat(1,statGammaOne, mean(cat(1,session(isession).stat.GammaOne.perm.meanPerf),1));
-    runGammaOne = cat(1,runGammaOne, mean(cat(1,session(isession).run.GammaOne.perm.meanPerf),1));
-    end
+statNormOpt=[];
+runNormOpt=[];
+
+for isession = 1:5
+    statNormOpt=cat(1,statNormOpt,mean(cat(1,session(isession).stat.GammaOne.perm.meanPerf),1));
+    runNormOpt=cat(1,runNormOpt,mean(cat(1,session(isession).run.GammaOne.perm.meanPerf),1));
+end
+
 
 figure, hold on
-shadedErrorBar(-150:10:1750, mean(statGammaOne,1), sem(statGammaOne,1), 'LineProps', 'k')
-shadedErrorBar(-150:10:1750, mean(runGammaOne,1), sem(runGammaOne,1), 'LineProps', 'r')
-title('Gamma One')
+shadedErrorBar(-150:10:1750, mean(statNormOpt,1),sem(statNormOpt,1), 'lineProps', 'k')
+shadedErrorBar(-150:10:1750, mean(runNormOpt,1),sem(runNormOpt,1), 'lineProps', 'r')
+title('Gamma=1')
+yline(1/6)
 
+
+
+diffArray = runNormOpt-statNormOpt;
+figure, hold on
+shadedErrorBar(-150:10:1750, mean(diffArray,1),sem(diffArray,1), 'lineProps', 'm')
+yline(0)
 
 
 

@@ -9,11 +9,11 @@ sessionTags = {'M22027', '20220517';...
 
 %%
 
-saveSuffix = 'test.mat';
+saveSuffix = 'PSTH_fastSlow_v2.mat';
 inputSuffix = 'basic.mat';
 
 tic
-for isession = 1:size(sessionTags,1)
+parfor isession = 1:size(sessionTags,1)
     isession
     
     inputFileName = [sessionTags{isession,1},'_', sessionTags{isession,2},'_', inputSuffix];
@@ -21,9 +21,9 @@ for isession = 1:size(sessionTags,1)
 
       processSession_PSTH(inputFileName,outputFileName,dataDir) 
     % processSession_r2overTime(inputFileName,outputFileName,dataDir)
-    % processSession_correlationAnalysis_v2(inputFileName,outputFileName,dataDir)
+     %processSession_correlationAnalysis_v2(inputFileName,outputFileName,dataDir)
      %processSession_decoding(inputFileName,outputFileName,dataDir)
-    %processSession_popAnalysis(inputFileName,outputFileName,dataDir)
+     %processSession_popAnalysis(inputFileName,outputFileName,dataDir)
     % processSession_FAoverTime(inputFileName,outputFileName,dataDir)
 
     %processSession_popAnalysis_fitSep(inputFileName,outputFileName,dataDir)

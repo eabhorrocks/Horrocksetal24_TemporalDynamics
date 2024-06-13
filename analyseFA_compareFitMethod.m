@@ -49,11 +49,30 @@ for ifile = 1:numel(fileNames)
 
 end
 
+
+%% compare SV
+
+allSV = cat(1,crit(1).SV, crit(2).statSV, crit(2).runSV);
+
+figure
+bar(1:3, mean(allSV,2)), hold on
+errorbar(1:3, mean(allSV,2), sem(allSV,2),'k','LineStyle','none');
+ax=gca; ax.XTick=1:3; ax.XTickLabel = {'joint', 'stat only', 'locom only'};
+
+allqOpt = cat(1,crit(1).qOpt, crit(2).statqOpt, crit(2).runqOpt);
+
+figure
+bar(1:3, mean(allqOpt,2)), hold on
+errorbar(1:3, mean(allqOpt,2), sem(allqOpt,2),'k','LineStyle','none');
+ax=gca; ax.XTick=1:3; ax.XTickLabel = {'joint', 'stat only', 'locom only'}
+
+%%
+
 compareSharedVariaance = cat(1,crit.SV)
 [mean(compareSharedVariaance,2), sem(compareSharedVariaance,2)]
 
 
-%% get velocity and speed for both types
+%% get velocity and speed for both 
 
 
 
