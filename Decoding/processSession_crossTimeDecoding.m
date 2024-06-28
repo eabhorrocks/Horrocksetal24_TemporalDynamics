@@ -261,11 +261,11 @@ for ipop = 1:numel(popSizeVector)
     ipop
     thisPopSize = popSizeVector(ipop);
     nReps = ceil((floor(nUnits/thisPopSize)*5)./nWorkers)*nWorkers;
-
+    clear rep
     parfor irep = 1:nReps
 
         units2use = randperm(nUnits,thisPopSize);
-
+            
 
         for iperm = 1:5
 
@@ -276,7 +276,7 @@ for ipop = 1:numel(popSizeVector)
             % stat
             tic
             for itrain_int = 1:size(intervals,1)
-                itrain_int
+                itrain_int;
                 bin2use = intervals(itrain_int,:);
                 dataStructTrain = struct;
                 for icond = 1:6
@@ -323,7 +323,7 @@ for ipop = 1:numel(popSizeVector)
             perf=[];
             
             for itrain_int = 1:size(intervals,1)
-                itrain_int
+                itrain_int;
                 bin2use = intervals(itrain_int,:);
                 dataStructTrain = struct;
                 for icond = 1:6
@@ -372,96 +372,96 @@ for ipop = 1:numel(popSizeVector)
             %%% same thing with shuffled trials %%%
 
             % stat shuffle
-            tic
-            for itrain_int = 1:size(intervals,1)
-                itrain_int
-                bin2use = intervals(itrain_int,:);
-                dataStructTrain = struct;
-                for icond = 1:6
-                    dataStructTrain(icond).data = statShuf.cond(icond).catData_sc(bin2use,units2use,trainidx);
-                end
-                trainingData = squeeze(mean(cat(3,dataStructTrain.data),1))'; % itrial x iunit
-                trainingLabels = repelem(1:6, 1, nTrain)';
-
-                idx2remove = find(var(trainingData,1)<eps);
-                trainingData(:,idx2remove)=[];
-
-                Mdl = fitcdiscr(trainingData,trainingLabels,'DiscrimType', ...
-                    options.DiscrimType,...
-                    'OptimizeHyperparameters',options.OptimizeHyperparameters,...
-                    'Gamma',options.Gamma,...
-                    'HyperparameterOptimizationOptions',...
-                    struct('ShowPlots',false,...
-                    'AcquisitionFunctionName','expected-improvement-plus',...
-                    'UseParallel',options.useParallel,'Verbose',0));
-
-
-                % testing
-                for itest_int = 1:size(intervals,1)
-                    bin2use = intervals(itest_int,:);
-                    dataStructTest = struct;
-                    for icond = 1:6
-                        dataStructTest(icond).data = statShuf.cond(icond).catData_sc(bin2use,units2use,testidx);
-                    end
-
-                    testingData = squeeze(mean(cat(3,dataStructTest.data),1))'; % itrial x iunit
-                    testingData(:,idx2remove)=[];
-                    testingLabels = repelem(1:6, 1, nTest)';
-
-                    predictions = Mdl.predict(testingData);
-                    perf(itrain_int, itest_int) = prop(predictions==testingLabels);
-
-                end
-            end
-
-            rep(irep).statShuf.perm(iperm).perf=perf;
-
-
-            % run shuffle
-            perf=[];
-            
-            for itrain_int = 1:size(intervals,1)
-                itrain_int
-                bin2use = intervals(itrain_int,:);
-                dataStructTrain = struct;
-                for icond = 1:6
-                    dataStructTrain(icond).data = runShuf.cond(icond).catData_sc(bin2use,units2use,trainidx);
-                end
-                trainingData = squeeze(mean(cat(3,dataStructTrain.data),1))'; % itrial x iunit
-                trainingLabels = repelem(1:6, 1, nTrain)';
-
-                idx2remove = find(var(trainingData,1)<eps);
-                trainingData(:,idx2remove)=[];
-
-                Mdl = fitcdiscr(trainingData,trainingLabels,'DiscrimType', ...
-                    options.DiscrimType,...
-                    'OptimizeHyperparameters',options.OptimizeHyperparameters,...
-                    'Gamma',options.Gamma,...
-                    'HyperparameterOptimizationOptions',...
-                    struct('ShowPlots',false,...
-                    'AcquisitionFunctionName','expected-improvement-plus',...
-                    'UseParallel',options.useParallel,'Verbose',0));
-
-
-                % testing
-                for itest_int = 1:size(intervals,1)
-                    bin2use = intervals(itest_int,:);
-                    dataStructTest = struct;
-                    for icond = 1:6
-                        dataStructTest(icond).data = runShuf.cond(icond).catData_sc(bin2use,units2use,testidx);
-                    end
-
-                    testingData = squeeze(mean(cat(3,dataStructTest.data),1))'; % itrial x iunit
-                    testingData(:,idx2remove)=[];
-                    testingLabels = repelem(1:6, 1, nTest)';
-
-                    predictions = Mdl.predict(testingData);
-                    perf(itrain_int, itest_int) = prop(predictions==testingLabels);
-
-                end
-            end
-
-            rep(irep).runShuf.perm(iperm).perf=perf;
+            % tic
+            % for itrain_int = 1:size(intervals,1)
+            %     itrain_int
+            %     bin2use = intervals(itrain_int,:);
+            %     dataStructTrain = struct;
+            %     for icond = 1:6
+            %         dataStructTrain(icond).data = statShuf.cond(icond).catData_sc(bin2use,units2use,trainidx);
+            %     end
+            %     trainingData = squeeze(mean(cat(3,dataStructTrain.data),1))'; % itrial x iunit
+            %     trainingLabels = repelem(1:6, 1, nTrain)';
+            % 
+            %     idx2remove = find(var(trainingData,1)<eps);
+            %     trainingData(:,idx2remove)=[];
+            % 
+            %     Mdl = fitcdiscr(trainingData,trainingLabels,'DiscrimType', ...
+            %         options.DiscrimType,...
+            %         'OptimizeHyperparameters',options.OptimizeHyperparameters,...
+            %         'Gamma',options.Gamma,...
+            %         'HyperparameterOptimizationOptions',...
+            %         struct('ShowPlots',false,...
+            %         'AcquisitionFunctionName','expected-improvement-plus',...
+            %         'UseParallel',options.useParallel,'Verbose',0));
+            % 
+            % 
+            %     % testing
+            %     for itest_int = 1:size(intervals,1)
+            %         bin2use = intervals(itest_int,:);
+            %         dataStructTest = struct;
+            %         for icond = 1:6
+            %             dataStructTest(icond).data = statShuf.cond(icond).catData_sc(bin2use,units2use,testidx);
+            %         end
+            % 
+            %         testingData = squeeze(mean(cat(3,dataStructTest.data),1))'; % itrial x iunit
+            %         testingData(:,idx2remove)=[];
+            %         testingLabels = repelem(1:6, 1, nTest)';
+            % 
+            %         predictions = Mdl.predict(testingData);
+            %         perf(itrain_int, itest_int) = prop(predictions==testingLabels);
+            % 
+            %     end
+            % end
+            % 
+            % rep(irep).statShuf.perm(iperm).perf=perf;
+            % 
+            % 
+            % % run shuffle
+            % perf=[];
+            % 
+            % for itrain_int = 1:size(intervals,1)
+            %     itrain_int
+            %     bin2use = intervals(itrain_int,:);
+            %     dataStructTrain = struct;
+            %     for icond = 1:6
+            %         dataStructTrain(icond).data = runShuf.cond(icond).catData_sc(bin2use,units2use,trainidx);
+            %     end
+            %     trainingData = squeeze(mean(cat(3,dataStructTrain.data),1))'; % itrial x iunit
+            %     trainingLabels = repelem(1:6, 1, nTrain)';
+            % 
+            %     idx2remove = find(var(trainingData,1)<eps);
+            %     trainingData(:,idx2remove)=[];
+            % 
+            %     Mdl = fitcdiscr(trainingData,trainingLabels,'DiscrimType', ...
+            %         options.DiscrimType,...
+            %         'OptimizeHyperparameters',options.OptimizeHyperparameters,...
+            %         'Gamma',options.Gamma,...
+            %         'HyperparameterOptimizationOptions',...
+            %         struct('ShowPlots',false,...
+            %         'AcquisitionFunctionName','expected-improvement-plus',...
+            %         'UseParallel',options.useParallel,'Verbose',0));
+            % 
+            % 
+            %     % testing
+            %     for itest_int = 1:size(intervals,1)
+            %         bin2use = intervals(itest_int,:);
+            %         dataStructTest = struct;
+            %         for icond = 1:6
+            %             dataStructTest(icond).data = runShuf.cond(icond).catData_sc(bin2use,units2use,testidx);
+            %         end
+            % 
+            %         testingData = squeeze(mean(cat(3,dataStructTest.data),1))'; % itrial x iunit
+            %         testingData(:,idx2remove)=[];
+            %         testingLabels = repelem(1:6, 1, nTest)';
+            % 
+            %         predictions = Mdl.predict(testingData);
+            %         perf(itrain_int, itest_int) = prop(predictions==testingLabels);
+            % 
+            %     end
+            % end
+            % 
+            % rep(irep).runShuf.perm(iperm).perf=perf;
 
         end
     end
