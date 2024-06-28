@@ -8,7 +8,7 @@ sessionTags = {'M22027', '20220517';...
     'M22033', '20220706'};
 
 dataDir = 'C:\Users\edward.horrocks\Documents\Code\V1Dynamics\Data\basic_111022';
-%dataDir = '/mnt/rds01/ibn-vision/USERS/Edd/Code/V1Dynamics2024/data';
+dataDir = 'E:\V1Data\Data\v1_fromC24';
 
 for isession = 1:size(sessionTags,1)
     isession

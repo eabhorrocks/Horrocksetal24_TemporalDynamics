@@ -244,6 +244,7 @@ for ipop = 1:numel(popSizeVector)
     ipop
     thisPopSize = popSizeVector(ipop);
     nReps = ceil((floor(nUnits/thisPopSize)*5)./nWorkers)*nWorkers;
+    clear rep
 
     parfor irep = 1:nReps
 

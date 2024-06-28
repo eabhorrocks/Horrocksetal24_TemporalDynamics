@@ -7,7 +7,7 @@ sessionTags = {'M22027', '20220517';...
     'M22033', '20220706'};
 
 dataDir = 'C:\Users\edward.horrocks\Documents\Code\V1Dynamics\Data\basic_111022';
-
+dataDir = 'E:\V1Data\Data\v1_fromC24';
 s = struct;
 
 for isession = 1:5
@@ -651,7 +651,7 @@ lme = fitlme(tbl, f, 'DummyVarCoding', 'reference')
 
 freqBandThresh = 6;
 
-for isesh = 1
+for isesh = 1:5
     for icond = 1:12
         [s(isesh).session.s.cond(icond).accPower,f] = pspectrum(s(isesh).session.s.cond(icond).speedAcc,100,'FrequencyLimits',[0 20],'FrequencyResolution',2);
         s(isesh).session.s.cond(icond).relPower = s(isesh).session.s.cond(icond).accPower/mean(s(isesh).session.s.cond(icond).accPower);

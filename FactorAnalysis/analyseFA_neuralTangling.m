@@ -8,7 +8,7 @@ sessionTags = {'M22027', '20220517';...
     'M22033', '20220706'};
 
 dataDir = 'C:\Users\edward.horrocks\Documents\Code\V1Dynamics\Data\basic_111022';
-
+dataDir = 'E:\V1Data\Data\v1_fromC24';
 s = struct;
 
 for isession = 1:5
@@ -147,7 +147,7 @@ speedcols = inferno(6);
 
 allStat=[];
 allRun=[];
-for isesh= 5
+for isesh= 1:5
     allStat = cat(1,allStat,sesh(isesh).speed.statLocalTangling);
     allRun = cat(1,allRun,sesh(isesh).speed.runLocalTangling);
 end
@@ -230,7 +230,7 @@ subjVec = categorical([repelem(1:5, 1, 6*180)]); subjVec=[subjVec,subjVec]';
 speedVec = categorical([repmat(1:6,1,5*180), repmat(1:6,1,5*180)]');
 stateVec = categorical(repelem(1:2,1,numel(statVals))');
 
-% [p,tbl,stats,terms] = anovan(allVals,{timeVec,stateVec,subjVec},'model',2,'random',3,'varnames',{'Time','State','Subj'});
+ [p,tbl,stats,terms] = anovan(allVals,{timeVec,stateVec,subjVec},'model',2,'random',3,'varnames',{'Time','State','Subj'});
 
 
 % [p,tbl,stats,terms] = anovan(allVals,{timeVec,stateVec,subjVec,speedVec},'model','full','varnames',{'Time','State','Subj','Speed'});

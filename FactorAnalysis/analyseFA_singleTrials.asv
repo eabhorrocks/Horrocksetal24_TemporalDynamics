@@ -13,7 +13,7 @@ s = struct;
 
 for isession = 1:5
     tic
-    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_FA_normal.mat'];
+    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_FAsmooth_Mar23.mat'];
 
     load(fullfile(dataDir,fname))
 
@@ -516,7 +516,7 @@ for isession = 1:5
         s(isession).session.cond(icond).meanDRoff = nanmean(tempVals);
     end
 end
-ti=[];
+t=[];
 ci=[];
 figure,
 subplot(121), hold on
@@ -525,7 +525,7 @@ for icond = 1:6
     for isession = 1:5
         plot(log2(s(isession).session.cond(icond).meanDRon), log2(s(isession).session.cond(icond+6).meanDRon),...
             'o', 'MarkerEdgeColor','none', 'MarkerFaceColor',speedcols(icond,:))
-        ti = cat(1,ti,[log2(s(isession).session.cond(icond).meanDRon), log2(s(isession).session.cond(icond+6).meanDRon)]);
+        ti = cat(1,[log2(s(isession).session.cond(icond).meanDRon), log2(s(isession).session.cond(icond+6).meanDRon)]);
         ci = cat(1,ci,icond);
     end
 end
@@ -537,12 +537,10 @@ ax.XTickLabel = [1 2 4 8]; ax.YTickLabel = ax.XTickLabel;
 
 subplot(122), hold on
 plot(log2([1 10]), log2([1 10]), 'k:')
-tioff=[];
 for icond = 1:6
     for isession = 1:5
         plot(log2(s(isession).session.cond(icond).meanDRoff), log2(s(isession).session.cond(icond+6).meanDRoff),...
             'o', 'MarkerEdgeColor','none', 'MarkerFaceColor',speedcols(icond,:))
-        tioff=cat(1,tioff, [log2(s(isession).session.cond(icond).meanDRoff), log2(s(isession).session.cond(icond+6).meanDRoff)]);
     end
 end
 xlim(log2([1 10]))

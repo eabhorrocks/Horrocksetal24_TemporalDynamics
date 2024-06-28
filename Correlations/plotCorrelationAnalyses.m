@@ -6,12 +6,12 @@ sessionTags = {'M22027', '20220517';...
     'M22032', '20220621';
     'M22033', '20220706'};
 
-dataDir = 'E:\V1Data\Data\basic_111022';
+dataDir = 'E:\V1Data\Data\v1_fromC24';
 
 
 for isession = 1:size(sessionTags,1)
     isession
-    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_','corrs_normal.mat']; %_FAcorrs_dev.mat
+    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_','corrs_longAxis.mat']; %_FAcorrs_dev.mat
 
     load(fullfile(dataDir,fname))
 
@@ -114,7 +114,7 @@ defaultAxesProperties(gca,true)
 
 %% plot pair-average of total, signal and noise correlations
 
-sesh2include=5;
+sesh2include=1:5;
 
 
 nTimeBins = numel(1:200-19);
@@ -917,7 +917,7 @@ for itime = [1, 34, 96, 136]
 end
 
 
-
+%% example
 
 
 

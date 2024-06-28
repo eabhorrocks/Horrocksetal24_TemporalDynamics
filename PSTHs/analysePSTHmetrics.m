@@ -8,10 +8,10 @@ sessionTags = {'M22027', '20220517';...
     'M22033', '20220706'};
 
 dataDir = 'C:\Users\edward.horrocks\Documents\Code\V1Dynamics\Data\basic_111022';
-
+dataDir='E:\V1Data\Data\v1_fromC24';
 
 for isession = 1:size(sessionTags,1)
-    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_PSTH_strict_noDownSamp.mat']; %PSTH_noEye %psth3rds
+    fname = [sessionTags{isession,1},'_', sessionTags{isession,2},'_PSTH_fastSlow_v2.mat']; %PSTH_noEye %psth3rds
 
     load(fullfile(dataDir,fname))
     [units.session] = deal(isession);

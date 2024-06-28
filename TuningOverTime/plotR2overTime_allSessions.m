@@ -648,12 +648,12 @@ end
 
 %
 %     good examples (m22029) [tempUnits idx]
-%     239, excellent (onset + offset) fr range: [0 26]
+%     [example cell 1]239, excellent (onset + offset) fr range: [0 26]
 %     300 is ok, [5 75ish]
 %     226 for onset [0 28]
 %     199 pretty good for both
 
-idx = 239 ;%= find([tempUnits.stat_tunedStart]>0.15 & [tempUnits.run_tunedStart]<0.1);
+idx = find([tempUnits.stat_tunedStart]>0.15 & [tempUnits.run_tunedStart]<0.1);
 %     229 is good for onset
 
 binWidth = 0.01;
@@ -671,10 +671,10 @@ for iunit = 1:numel(idx)
     figure,
     subplot(311), hold on
     stimes = tempUnits(idx(iunit)).spike_times'.*1000;
-    [pout, info] = spikeTimesPSTH(stimes,stat_intervalsCell,binWidth,options);
+%     [pout, info] = spikeTimesPSTH(stimes,stat_intervalsCell,binWidth,options);
     title(idx(iunit))
     subplot(312)
-    [pout, info] = spikeTimesPSTH(stimes,run_intervalsCell,binWidth,options);
+%     [pout, info] = spikeTimesPSTH(stimes,run_intervalsCell,binWidth,options);
     title(idx(iunit))
 
     subplot(313), hold on
@@ -690,7 +690,7 @@ end
 
 
 %% plot tuning curve with tuning strength values for exmaple neuron
-% subj=M22029, tempUnits, #239
+% subj=M22029, tempUnits, #239, ?226
 
 binVector = -200:10:1790;
 r2binVector = -100:10:1700;

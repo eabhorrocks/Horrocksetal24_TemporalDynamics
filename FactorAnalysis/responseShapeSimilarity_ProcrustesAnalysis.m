@@ -8,7 +8,7 @@ sessionTags = {'M22027', '20220517';...
     'M22033', '20220706'};
 
 dataDir = 'C:\Users\edward.horrocks\Documents\Code\V1Dynamics\Data\basic_111022';
-
+dataDir = 'E:\V1Data\Data\v1_fromC24';
 s = struct;
 
 for isession = 1:5
