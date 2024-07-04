@@ -118,7 +118,7 @@ for ipop = 1:4
     plot([0 4],[0 0],'k:')
     ylabel('Relative Performanace')
     xlabel('pop size')
-
+    n(ipop)=numel(vals{1})
 end
 ax =gca; ax.XTick = 1:4;
 defaultAxesProperties(gca, true)

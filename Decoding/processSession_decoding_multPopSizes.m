@@ -225,7 +225,7 @@ nWorkers = 18;
 tic
 
 % pop sizes
-popSizeVector = [10 20 40 80 120];
+popSizeVector = [10 20 40 80];% 120];
 popSizeVector(popSizeVector>nUnits)=[];
 % popSizeVector(end+1)=nUnits;
 timebins = [21:30;...
@@ -237,7 +237,14 @@ timebins = [21:30;...
     81:90;...
     91:100;...
     101:110;...
-    111:120;];
+    111:120];
+
+timebins=[];
+i=0;
+for it = 21:2:111
+    i=i+1;
+    timebins(i,:) = it:it+9;
+end
 
 tic
 for ipop = 1:numel(popSizeVector)
@@ -245,23 +252,16 @@ for ipop = 1:numel(popSizeVector)
     thisPopSize = popSizeVector(ipop);
     nReps = ceil((floor(nUnits/thisPopSize)*5)./nWorkers)*nWorkers;
     clear rep
-
     parfor irep = 1:nReps
 
         units2use = randperm(nUnits,thisPopSize);
         dataStruct = [];
 
 
-        for iperm = 1:5
-            iperm
-
-            trainidx = randperm(nTrials,nTrain);
-            testidx = find(~ismember(1:nTrials,trainidx));%             iperm
-
-
-
+        for iperm = 1:nPerms
+%             iperm
             %%% stat %%%
-            %             disp('stat')
+%             disp('stat')
             for iint = 1:size(timebins,1)
                 bin2use = timebins(iint,:);
                 for ispeed = 1:6
@@ -272,7 +272,7 @@ for ipop = 1:numel(popSizeVector)
             end
 
             %%% run %%%
-            %             disp('run')
+%             disp('run')
             for iint = 1:size(timebins,1)
                 bin2use = timebins(iint,:);
                 dataStruct = [];
@@ -291,23 +291,23 @@ for ipop = 1:numel(popSizeVector)
                 for iunit = 1:nUnits
                     shufOrder(iunit,:) = randperm(nTrials); % shuffle order for each unit for this speed
                 end
-
+           
                 %%% stat %%%
                 dataStruct(ispeed).data = stat.cond(ispeed).catData_sc(:,:,:); %
                 for iunit = 1:nUnits
-                    stat_shufDataStruct(ispeed).data(:,iunit,:) = dataStruct(ispeed).data(:,iunit,shufOrder(iunit,:));
+                     stat_shufDataStruct(ispeed).data(:,iunit,:) = dataStruct(ispeed).data(:,iunit,shufOrder(iunit,:));
                 end
 
                 %%% run %%%
                 dataStruct(ispeed).data = run.cond(ispeed).catData_sc(:,:,:); %
                 for iunit = 1:nUnits
-                    run_shufDataStruct(ispeed).data(:,iunit,:) = dataStruct(ispeed).data(:,iunit,shufOrder(iunit,:));
+                     run_shufDataStruct(ispeed).data(:,iunit,:) = dataStruct(ispeed).data(:,iunit,shufOrder(iunit,:));
                 end
 
             end
 
             %%% do the shuffled-trial decoding %%%
-            %             disp('stat shuf')
+%             disp('stat shuf')
             for iint = 1:size(timebins,1)
                 bin2use = timebins(iint,:);
                 tempDataStruct=struct;
@@ -320,7 +320,7 @@ for ipop = 1:numel(popSizeVector)
                 %                 clear tempDataStruct
             end
 
-            %             disp('run shuf')
+%             disp('run shuf')
             for iint = 1:size(timebins,1)
                 bin2use = timebins(iint,:);
                 tempDataStruct=struct;
@@ -358,7 +358,7 @@ dummyVar=[];
 
 save(fullfile(dataDir,outputFileName),'dummyVar', 'session', '-v7.3')
 
-end
+ end
 
 
 

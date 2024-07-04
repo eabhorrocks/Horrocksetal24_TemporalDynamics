@@ -25,7 +25,7 @@ speedcols=inferno(6);
 %% plot decoding results
 
 % plot average decoding performance
-bmp = -177:10:1775; 
+bmp = -175:10:1775; bmp(end)=[];
 
 allStat = [];
 allRun = [];
@@ -709,7 +709,7 @@ caxis([0 160])
 title('Onset')
 
 
-allVals = allRun(:,21:120);
+allVals = allStat(:,21:120);
 maxStretch =5; % bins
 
 nPSTH = size(allVals,1);
